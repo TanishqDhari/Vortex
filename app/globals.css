@@ -5,6 +5,19 @@
 
 :root {
   scrollbar-gutter: stable;
+  body[data-scroll-locked][data-scroll-locked] {
+      overflow: auto !important;
+    }
+    body[data-scroll-locked] {
+      margin-right: 0 !important;
+  }
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
   /* Updated color tokens for purple and light black cinema theme */
   --background: oklch(15.557% 0.0017 16.767); /* Light black background */
   --foreground: oklch(0.98 0 0); /* Pure white text */
@@ -14,7 +27,7 @@
   --popover-foreground: oklch(0.98 0 0); /* White text on popovers */
   --primary: #9900d6; /* purple accent color */
   --primary-foreground: oklch(0.98 0 0); /* White text on primary */
-  --secondary: oklch(0.2 0.02 0); /* Secondary dark elements */
+  --secondary: oklch(26.448% 0.00003 271.152); /* Secondary dark elements */
   --secondary-foreground: oklch(0.95 0 0); /* Light text on secondary */
   --muted: oklch(0.3 0.02 0); /* Muted elements */
   --muted-foreground: oklch(87.917% 0.0001 271.152); /* Muted text */
@@ -24,21 +37,21 @@
   --destructive-foreground: oklch(0.98 0 0); /* White text on destructive */
   --border: oklch(0.2 0.02 0); /* Border color */
   --input: oklch(0.18 0.02 0); /* Input background */
-  --ring: oklch(0.55 0.22 15); /* purple focus ring color */
-  --chart-1: oklch(0.55 0.22 15);
+  --ring: #b700ffca; /* purple focus ring color */
+  --chart-1: #b700ffca;
   --chart-2: oklch(0.45 0.12 200);
   --chart-3: oklch(0.65 0.18 120);
   --chart-4: oklch(0.5 0.2 300);
-  --chart-5: oklch(0.6 0.22 15);
+  --chart-5: #b700ffca;
   --radius: 0.5rem;
   --sidebar: oklch(0.08 0.02 0);
   --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.55 0.22 15);
+  --sidebar-primary: #b700ffca;
   --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.2 0.02 0);
+  --sidebar-accent: #b700ff35;
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(0.2 0.02 0);
-  --sidebar-ring: oklch(0.55 0.22 15);
+  --sidebar-ring: #b700ffca;
 }
 
 @theme inline {

@@ -12,7 +12,7 @@ import {
 
 export function CarouselSpacing() {
   return (
-    <Carousel className="w-full">
+    <Carousel className="w-full px-10">
       <CarouselContent className="gap-4">
         {Array.from({ length: 10 }).map((_, index) => (
           <CarouselItem
@@ -31,8 +31,8 @@ export function CarouselSpacing() {
       </CarouselContent>
 
       {/* Arrow Buttons */}
-      <CarouselPrevious className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10" />
-      <CarouselNext className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10" />
+      <CarouselPrevious className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 h-20" style={{ backgroundColor: "rgba(172, 172, 172, 0.16)" }}/>
+      <CarouselNext className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 h-20" style={{ backgroundColor: "rgba(172, 172, 172, 0.16)" }}/>
     </Carousel>
   );
 }

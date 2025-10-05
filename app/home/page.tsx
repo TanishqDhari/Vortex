@@ -1,24 +1,11 @@
-"use client"
+'use client'
 
-import { useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { HeroCarousel } from "@/components/hero-carousel"
-import { ContentSection } from "@/components/content-section"
+import { HorizontalCarousel } from "@/components/movie-carousel"
 import { MediaCard } from "@/components/media-card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Search, Bell, User } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-// Mock data for demonstration
+// Mock data (your existing arrays)
 const featuredContent = [
   {
     id: 1,
@@ -72,102 +59,59 @@ const continueWatching = Array.from({ length: 6 }, (_, i) => ({
 }))
 
 export default function HomePage() {
-  const [searchQuery, setSearchQuery] = useState("")
-
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-64">
-        {/* Top Navigation */}
-        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center space-x-4 flex-1 max-w-md">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search movies, TV shows, actors..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-secondary/50"
-                />
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="relative">
-                <Bell className="h-5 w-5" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
-                  3
-                </Badge>
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="/diverse-user-avatars.png" alt="User" />
-                      <AvatarFallback>JD</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>Settings</DropdownMenuItem>
-                  <DropdownMenuItem>Subscription</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Log out</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </header>
-
+      <main className="flex-1 ml-16 overflow-hidden">
         {/* Hero Carousel */}
         <HeroCarousel content={featuredContent} />
 
         {/* Content Sections */}
         <div className="px-6 py-8 space-y-12">
           {/* Continue Watching */}
-          <ContentSection title="Continue Watching" viewAllHref="/watchlist">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <section>
+            <h2 className="text-white text-xl font-semibold mb-4">Continue Watching</h2>
+            <HorizontalCarousel>
               {continueWatching.map((item) => (
                 <MediaCard key={item.id} {...item} showProgress />
               ))}
-            </div>
-          </ContentSection>
+            </HorizontalCarousel>
+          </section>
 
           {/* Trending Now */}
-          <ContentSection title="Trending Now" viewAllHref="/movies">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+          <section>
+            <h2 className="text-white text-xl font-semibold mb-4">Trending Now</h2>
+            <HorizontalCarousel>
               {trendingMovies.map((item) => (
                 <MediaCard key={item.id} {...item} />
               ))}
-            </div>
-          </ContentSection>
+            </HorizontalCarousel>
+          </section>
 
-          {/* Recommended for You */}
-          <ContentSection title="Recommended for You" viewAllHref="/recommendations">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+          {/* Recommended For You */}
+          <section>
+            <h2 className="text-white text-xl font-semibold mb-4">Recommended for You</h2>
+            <HorizontalCarousel>
               {trendingMovies.slice(0, 8).map((item) => (
                 <MediaCard key={`rec-${item.id}`} {...item} />
               ))}
-            </div>
-          </ContentSection>
+            </HorizontalCarousel>
+          </section>
 
           {/* Popular Movies */}
-          <ContentSection title="Popular Movies" viewAllHref="/movies/popular">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+          <section>
+            <h2 className="text-white text-xl font-semibold mb-4">Popular Movies</h2>
+            <HorizontalCarousel>
               {trendingMovies.slice(2, 10).map((item) => (
                 <MediaCard key={`pop-${item.id}`} {...item} />
               ))}
-            </div>
-          </ContentSection>
+            </HorizontalCarousel>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

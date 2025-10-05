@@ -65,7 +65,7 @@ export default function SearchPage() {
     <div className="min-h-screen bg-background flex">
       <Sidebar />
 
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1 ml-16">
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="px-6 py-4">

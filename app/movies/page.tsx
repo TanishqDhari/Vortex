@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter, Grid3X3, List } from "lucide-react"
+import { Search, Filter } from "lucide-react"
 
-// Mock data for movies
 const movies = Array.from({ length: 24 }, (_, i) => ({
   id: i + 1,
   title: `Movie ${i + 1}`,
@@ -33,14 +32,12 @@ export default function MoviesPage() {
   const [selectedRating, setSelectedRating] = useState("All")
   const [sortBy, setSortBy] = useState("popularity")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [showFilters, setShowFilters] = useState(false)
 
   const filteredMovies = movies.filter((movie) => {
     const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesGenre = selectedGenre === "All" || movie.genre === selectedGenre
     const matchesYear = selectedYear === "All" || movie.year.toString() === selectedYear
     const matchesRating = selectedRating === "All" || movie.rating >= Number.parseInt(selectedRating)
-
     return matchesSearch && matchesGenre && matchesYear && matchesRating
   })
 
@@ -48,48 +45,30 @@ export default function MoviesPage() {
     <div className="min-h-screen bg-background flex">
       <Sidebar />
 
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1 ml-16 flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-3xl font-bold text-foreground">Movies</h1>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border px-6 py-4">
+          {/* Search Bar */}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+            <div className="relative w-full lg:w-1/3">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search movies..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
 
-            {/* Search and Filters */}
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search movies..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              <div className="flex items-center space-x-3">
+            {/* Filters with labels outside */}
+            <div className="flex flex-wrap gap-4 items-center justify-center">
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground mb-1">Genre</span>
                 <Select value={selectedGenre} onValueChange={setSelectedGenre}>
                   <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Genre" />
+                    <SelectValue>{selectedGenre}</SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="absolute z-50 w-32">
                     {genres.map((genre) => (
                       <SelectItem key={genre} value={genre}>
                         {genre}
@@ -97,12 +76,15 @@ export default function MoviesPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
 
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground mb-1">Year</span>
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
                   <SelectTrigger className="w-24">
-                    <SelectValue placeholder="Year" />
+                    <SelectValue>{selectedYear}</SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="absolute z-50 w-24">
                     {years.map((year) => (
                       <SelectItem key={year} value={year}>
                         {year}
@@ -110,48 +92,44 @@ export default function MoviesPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
 
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground mb-1">Rating</span>
+                <Select value={selectedRating} onValueChange={setSelectedRating}>
+                  <SelectTrigger className="w-24">
+                    <SelectValue>{selectedRating}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="absolute z-50 w-24">
+                    {ratings.map((rating) => (
+                      <SelectItem key={rating} value={rating}>
+                        {rating}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground mb-1">Sort by</span>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-36">
-                    <SelectValue placeholder="Sort by" />
+                    <SelectValue>{sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}</SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="absolute z-50 w-36">
                     <SelectItem value="popularity">Popularity</SelectItem>
                     <SelectItem value="rating">Rating</SelectItem>
                     <SelectItem value="year">Year</SelectItem>
                     <SelectItem value="title">Title</SelectItem>
                   </SelectContent>
                 </Select>
-
-                <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="lg:hidden">
-                  <Filter className="h-4 w-4" />
-                </Button>
               </div>
-            </div>
-
-            {/* Active Filters */}
-            <div className="flex items-center space-x-2 mt-4">
-              {selectedGenre !== "All" && (
-                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedGenre("All")}>
-                  {selectedGenre} ×
-                </Badge>
-              )}
-              {selectedYear !== "All" && (
-                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedYear("All")}>
-                  {selectedYear} ×
-                </Badge>
-              )}
-              {selectedRating !== "All" && (
-                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedRating("All")}>
-                  {selectedRating}+ ×
-                </Badge>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        {/* Movies list/grid scrollable */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 p-6">
           <div className="mb-4 text-muted-foreground">
             Showing {filteredMovies.length} of {movies.length} movies
           </div>

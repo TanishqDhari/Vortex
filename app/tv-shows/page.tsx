@@ -3,13 +3,12 @@
 import { useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { MediaCard } from "@/components/media-card"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Grid3X3, List } from "lucide-react"
+import { Search } from "lucide-react"
 
-// Mock data for TV shows
+// Mock TV shows
 const tvShows = Array.from({ length: 24 }, (_, i) => ({
   id: i + 1,
   title: `TV Series ${i + 1}`,
@@ -19,77 +18,57 @@ const tvShows = Array.from({ length: 24 }, (_, i) => ({
   genre: ["Drama", "Comedy", "Thriller", "Sci-Fi"][Math.floor(Math.random() * 4)],
   seasons: Math.floor(Math.random() * 5) + 1,
   episodes: Math.floor(Math.random() * 50) + 10,
-  status: ["Ongoing", "Completed", "Cancelled"][Math.floor(Math.random() * 3)],
   creator: `Creator ${i + 1}`,
 }))
 
 const genres = ["All", "Drama", "Comedy", "Thriller", "Sci-Fi", "Crime", "Fantasy"]
 const years = ["All", "2024", "2023", "2022", "2021", "2020"]
-const statuses = ["All", "Ongoing", "Completed", "Cancelled"]
+const ratings = ["All", "9+", "8+", "7+", "6+"]
+const sortOptions = ["popularity", "rating", "year", "title"]
 
 export default function TVShowsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedGenre, setSelectedGenre] = useState("All")
   const [selectedYear, setSelectedYear] = useState("All")
-  const [selectedStatus, setSelectedStatus] = useState("All")
+  const [selectedRating, setSelectedRating] = useState("All")
   const [sortBy, setSortBy] = useState("popularity")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 
   const filteredShows = tvShows.filter((show) => {
     const matchesSearch = show.title.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesGenre = selectedGenre === "All" || show.genre === selectedGenre
     const matchesYear = selectedYear === "All" || show.year.toString() === selectedYear
-    const matchesStatus = selectedStatus === "All" || show.status === selectedStatus
-
-    return matchesSearch && matchesGenre && matchesYear && matchesStatus
+    const matchesRating = selectedRating === "All" || show.rating >= Number.parseInt(selectedRating)
+    return matchesSearch && matchesGenre && matchesYear && matchesRating
   })
 
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar />
 
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1 ml-16 flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-3xl font-bold text-foreground">TV Shows</h1>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border px-6 py-4">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+            {/* Search input */}
+            <div className="relative w-full lg:w-1/3">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search TV shows..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
 
-            {/* Search and Filters */}
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search TV shows..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              <div className="flex items-center space-x-3">
+            {/* Filters with labels */}
+            <div className="flex flex-wrap gap-4 items-center justify-center">
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground mb-1">Genre</span>
                 <Select value={selectedGenre} onValueChange={setSelectedGenre}>
                   <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Genre" />
+                    <SelectValue>{selectedGenre}</SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="absolute z-50 w-32">
                     {genres.map((genre) => (
                       <SelectItem key={genre} value={genre}>
                         {genre}
@@ -97,12 +76,15 @@ export default function TVShowsPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
 
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground mb-1">Year</span>
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
                   <SelectTrigger className="w-24">
-                    <SelectValue placeholder="Year" />
+                    <SelectValue>{selectedYear}</SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="absolute z-50 w-24">
                     {years.map((year) => (
                       <SelectItem key={year} value={year}>
                         {year}
@@ -110,116 +92,81 @@ export default function TVShowsPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
 
-                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Status" />
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground mb-1">Rating</span>
+                <Select value={selectedRating} onValueChange={setSelectedRating}>
+                  <SelectTrigger className="w-24">
+                    <SelectValue>{selectedRating}</SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
-                    {statuses.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
+                  <SelectContent className="absolute z-50 w-24">
+                    {ratings.map((rating) => (
+                      <SelectItem key={rating} value={rating}>
+                        {rating}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
 
+              <div className="flex flex-col">
+                <span className="text-sm text-muted-foreground mb-1">Sort by</span>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-36">
-                    <SelectValue placeholder="Sort by" />
+                    <SelectValue>{sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}</SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="popularity">Popularity</SelectItem>
-                    <SelectItem value="rating">Rating</SelectItem>
-                    <SelectItem value="year">Year</SelectItem>
-                    <SelectItem value="title">Title</SelectItem>
+                  <SelectContent className="absolute z-50 w-36">
+                    {sortOptions.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option.charAt(0).toUpperCase() + option.slice(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
+          </div>
 
-            {/* Active Filters */}
-            <div className="flex items-center space-x-2 mt-4">
-              {selectedGenre !== "All" && (
-                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedGenre("All")}>
-                  {selectedGenre} ×
-                </Badge>
-              )}
-              {selectedYear !== "All" && (
-                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedYear("All")}>
-                  {selectedYear} ×
-                </Badge>
-              )}
-              {selectedStatus !== "All" && (
-                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedStatus("All")}>
-                  {selectedStatus} ×
-                </Badge>
-              )}
-            </div>
+          {/* Active filters */}
+          <div className="flex items-center space-x-2">
+            {selectedGenre !== "All" && (
+              <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedGenre("All")}>
+                {selectedGenre} ×
+              </Badge>
+            )}
+            {selectedYear !== "All" && (
+              <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedYear("All")}>
+                {selectedYear} ×
+              </Badge>
+            )}
+            {selectedRating !== "All" && (
+              <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedRating("All")}>
+                {selectedRating} ×
+              </Badge>
+            )}
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 p-6">
           <div className="mb-4 text-muted-foreground">
             Showing {filteredShows.length} of {tvShows.length} TV shows
           </div>
 
-          {viewMode === "grid" ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-              {filteredShows.map((show) => (
-                <MediaCard
-                  key={show.id}
-                  id={show.id}
-                  title={show.title}
-                  year={show.year}
-                  rating={show.rating}
-                  image={show.image}
-                  genre={[show.genre]}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredShows.map((show) => (
-                <div
-                  key={show.id}
-                  className="flex items-center space-x-4 p-4 bg-card rounded-lg hover:bg-card/80 transition-colors"
-                >
-                  <img
-                    src={show.image || "/placeholder.svg"}
-                    alt={show.title}
-                    className="w-16 h-24 object-cover rounded"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{show.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {show.year} • {show.seasons} Season{show.seasons > 1 ? "s" : ""}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {show.episodes} Episodes • Creator: {show.creator}
-                    </p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Badge variant="outline">{show.genre}</Badge>
-                      <Badge
-                        variant={
-                          show.status === "Ongoing"
-                            ? "default"
-                            : show.status === "Completed"
-                              ? "secondary"
-                              : "destructive"
-                        }
-                      >
-                        {show.status}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">⭐ {show.rating.toFixed(1)}</span>
-                    </div>
-                  </div>
-                  <Button>Watch Now</Button>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+            {filteredShows.map((show) => (
+              <MediaCard
+                key={show.id}
+                id={show.id}
+                title={show.title}
+                year={show.year}
+                rating={show.rating}
+                image={show.image}
+                genre={[show.genre]}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

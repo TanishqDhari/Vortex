@@ -19,7 +19,14 @@ const buttonVariants = cva(
           'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
         ghost:
           'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
-        link: 'text-primary underline-offset-4 hover:underline',
+        link: 
+          'text-primary underline-offset-4 hover:underline',
+        gradient:
+          'bg-[linear-gradient(-45deg,#192145,#210e17)] text-white shadow-md font-semibold',
+        normal:
+          'bg-white/10 text-white flex items-center justify-center gap-2 px-6 py-2 rounded-md font-medium transition-all duration-300 hover:bg-white/20 hover:text-white',
+        watchlist:
+          'relative flex items-center justify-center gap-2 px-8 py-2 rounded-md bg-white/10 hover:bg-white/20 text-white transition-all duration-300'
       },
       size: {
         default: 'h-9 px-6 py-2 has-[>svg]:px-3',

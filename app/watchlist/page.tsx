@@ -3,12 +3,12 @@
 import { useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { MediaCard } from "@/components/media-card"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Plus, Grid3X3, List, Bookmark, Trash2 } from "lucide-react"
+import { Search, Plus, Bookmark } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 // Mock watchlist data
 const watchlistItems = Array.from({ length: 16 }, (_, i) => ({
@@ -20,7 +20,6 @@ const watchlistItems = Array.from({ length: 16 }, (_, i) => ({
   genre: ["Action", "Drama", "Comedy", "Thriller"][Math.floor(Math.random() * 4)],
   type: Math.random() > 0.5 ? "movie" : "tv",
   addedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-  priority: ["High", "Medium", "Low"][Math.floor(Math.random() * 3)],
 }))
 
 const customLists = [
@@ -34,8 +33,6 @@ export default function WatchlistPage() {
   const [selectedType, setSelectedType] = useState("all")
   const [selectedGenre, setSelectedGenre] = useState("all")
   const [sortBy, setSortBy] = useState("added")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [selectedItems, setSelectedItems] = useState<number[]>([])
 
   const filteredItems = watchlistItems.filter((item) => {
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -44,109 +41,86 @@ export default function WatchlistPage() {
     return matchesSearch && matchesType && matchesGenre
   })
 
-  const toggleItemSelection = (id: number) => {
-    setSelectedItems((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]))
-  }
-
-  const removeSelectedItems = () => {
-    // Remove selected items from watchlist
-    setSelectedItems([])
-  }
-
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar />
 
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1 ml-16">
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="px-6 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground flex items-center">
-                  <Bookmark className="w-8 h-8 mr-3" />
-                  My Watchlist
-                </h1>
-                <p className="text-muted-foreground mt-1">{filteredItems.length} items in your watchlist</p>
-              </div>
-              <div className="flex items-center space-x-2">
-                {selectedItems.length > 0 && (
-                  <Button variant="destructive" size="sm" onClick={removeSelectedItems}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Remove ({selectedItems.length})
-                  </Button>
-                )}
-                <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+            <h1 className="text-3xl font-bold text-foreground flex items-center mb-1">
+              <Bookmark className="w-8 h-8 mr-3" />
+              My Watchlist
+            </h1>
+            <p className="text-muted-foreground mb-4">{filteredItems.length} items in your watchlist</p>
 
             {/* Search and Filters */}
             <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search your watchlist..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+             <div className="flex-1 relative h-10">
+  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
+  <Input
+    placeholder="Search your watchlist..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="pl-10 h-full text-sm leading-none"
+  />
+</div>
 
-              <div className="flex items-center space-x-3">
-                <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="movie">Movies</SelectItem>
-                    <SelectItem value="tv">TV Shows</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex flex-wrap gap-4">
+                {/* Type Filter */}
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground mb-1">Type</span>
+                  <Select value={selectedType} onValueChange={setSelectedType}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="movie">Movies</SelectItem>
+                      <SelectItem value="tv">TV Shows</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Genre" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Genres</SelectItem>
-                    <SelectItem value="Action">Action</SelectItem>
-                    <SelectItem value="Comedy">Comedy</SelectItem>
-                    <SelectItem value="Drama">Drama</SelectItem>
-                    <SelectItem value="Thriller">Thriller</SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Genre Filter */}
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground mb-1">Genre</span>
+                  <Select value={selectedGenre} onValueChange={setSelectedGenre}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="All Genres" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Genres</SelectItem>
+                      <SelectItem value="Action">Action</SelectItem>
+                      <SelectItem value="Comedy">Comedy</SelectItem>
+                      <SelectItem value="Drama">Drama</SelectItem>
+                      <SelectItem value="Thriller">Thriller</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-36">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="added">Date Added</SelectItem>
-                    <SelectItem value="title">Title</SelectItem>
-                    <SelectItem value="year">Year</SelectItem>
-                    <SelectItem value="rating">Rating</SelectItem>
-                    <SelectItem value="priority">Priority</SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Sort By */}
+                <div className="flex flex-col">
+                  <span className="text-sm text-muted-foreground mb-1">Sort by</span>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-36">
+                      <SelectValue placeholder="Date Added" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="added">Date Added</SelectItem>
+                      <SelectItem value="title">Title</SelectItem>
+                      <SelectItem value="year">Year</SelectItem>
+                      <SelectItem value="rating">Rating</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Content */}
         <div className="p-6">
           <div className="grid lg:grid-cols-4 gap-6">
             {/* Custom Lists Sidebar */}
@@ -169,7 +143,7 @@ export default function WatchlistPage() {
                       </div>
                     </div>
                   ))}
-                  <Button variant="outline" className="w-full bg-transparent">
+                  <Button variant="normal" className="w-full bg-transparent">
                     <Plus className="w-4 h-4 mr-2" />
                     Create List
                   </Button>
@@ -177,97 +151,19 @@ export default function WatchlistPage() {
               </Card>
             </div>
 
-            {/* Main Content */}
+            {/* Main Watchlist */}
             <div className="lg:col-span-3">
-              {viewMode === "grid" ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {filteredItems.map((item) => (
-                    <div key={item.id} className="relative group">
-                      <div
-                        className={`absolute top-2 left-2 z-10 w-5 h-5 rounded border-2 cursor-pointer transition-colors ${
-                          selectedItems.includes(item.id)
-                            ? "bg-primary border-primary"
-                            : "bg-background/80 border-border hover:border-primary"
-                        }`}
-                        onClick={() => toggleItemSelection(item.id)}
-                      />
-                      <MediaCard {...item} />
-                      <div className="mt-2 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <Badge variant="outline" className="text-xs">
-                            {item.type === "movie" ? "Movie" : "TV Show"}
-                          </Badge>
-                          <Badge
-                            variant={
-                              item.priority === "High"
-                                ? "destructive"
-                                : item.priority === "Medium"
-                                  ? "default"
-                                  : "secondary"
-                            }
-                            className="text-xs"
-                          >
-                            {item.priority}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Added {item.addedAt}</p>
-                      </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {filteredItems.map((item) => (
+                  <div key={item.id}>
+                    <MediaCard {...item} />
+                    <div className="mt-2 space-y-1">
+                      {/* Removed type badge */}
+                      <p className="text-xs text-muted-foreground">Added {item.addedAt}</p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center space-x-4 p-4 bg-card/50 rounded-lg hover:bg-card/80 transition-colors"
-                    >
-                      <div
-                        className={`w-5 h-5 rounded border-2 cursor-pointer transition-colors ${
-                          selectedItems.includes(item.id)
-                            ? "bg-primary border-primary"
-                            : "bg-background border-border hover:border-primary"
-                        }`}
-                        onClick={() => toggleItemSelection(item.id)}
-                      />
-                      <img
-                        src={item.image || "/placeholder.svg"}
-                        alt={item.title}
-                        className="w-12 h-18 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-foreground">{item.title}</h3>
-                        <p className="text-sm text-muted-foreground">{item.year}</p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {item.type === "movie" ? "Movie" : "TV Show"}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {item.genre}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground">⭐ {item.rating.toFixed(1)}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge
-                          variant={
-                            item.priority === "High"
-                              ? "destructive"
-                              : item.priority === "Medium"
-                                ? "default"
-                                : "secondary"
-                          }
-                          className="mb-2"
-                        >
-                          {item.priority}
-                        </Badge>
-                        <p className="text-xs text-muted-foreground">Added {item.addedAt}</p>
-                      </div>
-                      <Button>Watch Now</Button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

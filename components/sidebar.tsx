@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
   Play,
@@ -13,16 +12,13 @@ import {
   Grid3X3,
   User,
   Settings,
-  Menu,
-  X,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { usePathname } from "next/navigation"
 
 const navigation = [
-  { name: "Home", href: "/home", icon: Home, current: true },
+  { name: "Home", href: "/home", icon: Home },
   { name: "Search", href: "/search", icon: Search },
   { name: "Movies", href: "/movies", icon: Film },
   { name: "TV Shows", href: "/tv-shows", icon: Tv },
@@ -36,113 +32,85 @@ const bottomNavigation = [
 ]
 
 export function Sidebar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [hovered, setHovered] = useState<string | null>(null)
+  const pathname = usePathname() // Get current route
 
   return (
-    <>
-      {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="bg-background/80 backdrop-blur-sm"
-        >
-          {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
-      </div>
+    <div className="fixed top-0 left-0 z-40 h-full w-16 border-r border-sidebar-border bg-sidebar/80 backdrop-blur-xl flex flex-col justify-between py-6">
+      {/* Logo */}
+      <div className="flex flex-col items-center space-y-8">
+        <div className="w-8 h-8 bg-sidebar-primary rounded-full flex items-center justify-center">
+          <Play className="w-4 h-4 text-sidebar-primary-foreground" />
+        </div>
 
-      <div className="hidden lg:block fixed top-4 left-4 z-50">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="bg-background/80 backdrop-blur-sm"
-        >
-          {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-        </Button>
-      </div>
-
-      {/* Sidebar */}
-      <div
-        className={cn(
-          "fixed inset-y-0 left-0 z-40 bg-sidebar border-r border-sidebar-border transform transition-all duration-300 ease-in-out",
-          isCollapsed ? "w-16" : "w-64",
-          "lg:translate-x-0",
-          isMobileMenuOpen ? "translate-x-0 w-64" : "lg:translate-x-0 -translate-x-full lg:translate-x-0",
-        )}
-      >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div
-            className={cn(
-              "flex items-center border-b border-sidebar-border transition-all duration-300",
-              isCollapsed ? "px-4 py-6 justify-center" : "px-6 py-6",
-            )}
-          >
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-sidebar-primary rounded-full flex items-center justify-center">
-                <Play className="w-4 h-4 text-sidebar-primary-foreground" />
-              </div>
-              {!isCollapsed && <span className="text-xl font-bold text-sidebar-foreground">Vortex</span>}
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
-            {navigation.map((item) => (
-              <Link
+        {/* Navigation icons */}
+        <nav className="flex flex-col space-y-4 mt-6">
+          {navigation.map((item) => {
+            const isActive = pathname === item.href // dynamic active check
+            return (
+              <div
                 key={item.name}
-                href={item.href}
-                className={cn(
-                  "flex items-center rounded-lg text-sm font-medium transition-colors",
-                  isCollapsed ? "px-3 py-3 justify-center" : "px-3 py-2",
-                  item.current
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                )}
-                onClick={() => setIsMobileMenuOpen(false)}
-                title={isCollapsed ? item.name : undefined}
+                className="relative group flex justify-center"
+                onMouseEnter={() => setHovered(item.name)}
+                onMouseLeave={() => setHovered(null)}
               >
-                <item.icon className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
-                {!isCollapsed && (
-                  <>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex items-center justify-center rounded-lg p-3 text-sidebar-foreground hover:bg-sidebar-accent/40 transition-colors",
+                    isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                </Link>
+
+                {/* Floating label */}
+                {hovered === item.name && (
+                  <div className="absolute left-16 top-1/2 -translate-y-1/2 px-3 py-1 rounded-lg bg-sidebar/70 backdrop-blur-md text-sm text-sidebar-foreground shadow-md whitespace-nowrap ml-2 flex items-center gap-2">
                     {item.name}
                     {item.badge && (
-                      <Badge className="ml-auto bg-sidebar-primary text-sidebar-primary-foreground">{item.badge}</Badge>
+                      <Badge className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                        {item.badge}
+                      </Badge>
                     )}
-                  </>
+                  </div>
                 )}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Bottom Navigation */}
-          <div className="px-4 py-4 border-t border-sidebar-border space-y-2">
-            {bottomNavigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "flex items-center rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
-                  isCollapsed ? "px-3 py-3 justify-center" : "px-3 py-2",
-                )}
-                onClick={() => setIsMobileMenuOpen(false)}
-                title={isCollapsed ? item.name : undefined}
-              >
-                <item.icon className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
-                {!isCollapsed && item.name}
-              </Link>
-            ))}
-          </div>
-        </div>
+              </div>
+            )
+          })}
+        </nav>
       </div>
 
-      {/* Mobile overlay */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
-      )}
-    </>
+      {/* Bottom Navigation */}
+      <div className="flex flex-col items-center space-y-4">
+        {bottomNavigation.map((item) => {
+          const isActive = pathname === item.href
+          return (
+            <div
+              key={item.name}
+              className="relative group flex justify-center"
+              onMouseEnter={() => setHovered(item.name)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              <Link
+                href={item.href}
+                className={cn(
+                  "flex items-center justify-center rounded-lg p-3 text-sidebar-foreground hover:bg-sidebar-accent/40 transition-colors",
+                  isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+              </Link>
+
+              {hovered === item.name && (
+                <div className="absolute left-16 top-1/2 -translate-y-1/2 px-3 py-1 rounded-lg bg-sidebar/70 backdrop-blur-md text-sm text-sidebar-foreground shadow-md whitespace-nowrap ml-2">
+                  {item.name}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }

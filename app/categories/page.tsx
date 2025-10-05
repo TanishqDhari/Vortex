@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronRight } from "lucide-react"
+import { HorizontalCarousel } from "@/components/movie-carousel"
 
 const categories = [
   {
@@ -67,7 +68,7 @@ const categories = [
   },
 ]
 
-const featuredContent = Array.from({ length: 8 }, (_, i) => ({
+const featuredContent = Array.from({ length: 26 }, (_, i) => ({
   id: i + 1,
   title: `Featured ${i + 1}`,
   year: 2024,
@@ -82,8 +83,7 @@ export default function CategoriesPage() {
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar />
-
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1 ml-16 min-w-0">
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="px-6 py-4">
@@ -119,14 +119,20 @@ export default function CategoriesPage() {
               </div>
 
               {/* Featured This Week */}
-              <div>
+              {/* <div>
                 <h2 className="text-2xl font-semibold text-foreground mb-6">Featured This Week</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                   {featuredContent.map((item) => (
                     <MediaCard key={item.id} {...item} />
                   ))}
                 </div>
-              </div>
+              </div> */}
+              <HorizontalCarousel>
+                {featuredContent.map((item) => (
+                  <MediaCard key={item.id} {...item} />
+                ))}
+              </HorizontalCarousel>
+
 
               {/* Quick Filters */}
               <div>

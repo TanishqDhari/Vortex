@@ -19,6 +19,7 @@ import {
   Download,
   Share2,
   Heart,
+  Check,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -70,7 +71,7 @@ export default function MediaPage({ params }: { params: { id: string } }) {
     return (
       <div className="min-h-screen bg-background flex">
         <Sidebar />
-        <div className="flex-1 lg:ml-64 flex items-center justify-center">
+        <div className="flex-1 ml-16 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground mb-2">Media Not Found</h1>
             <p className="text-muted-foreground">The requested media could not be found.</p>
@@ -85,77 +86,102 @@ export default function MediaPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex">
       <Sidebar />
 
-      <div className="lg:ml-64">
+      <div className="flex-1 ml-16">
         {/* Hero Section */}
-        <div className="relative h-[70vh] overflow-hidden">
-          <img src={media.backdrop || "/placeholder.svg"} alt={media.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+        <div className="relative w-full">
+          {/* Backdrop */}
+          <div className="absolute inset-0 -z-10">
+            <img
+              src={media.backdrop || "/placeholder.svg"}
+              alt={media.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+          </div>
 
-          <div className="absolute bottom-0 left-0 right-0 p-8">
-            <div className="max-w-4xl">
-              <div className="flex flex-col md:flex-row gap-6">
-                <img
-                  src={media.poster || "/placeholder.svg"}
-                  alt={media.title}
-                  className="w-48 h-72 object-cover rounded-lg shadow-2xl"
-                />
+         {/* Hero content */}
+          <div className="relative px-6 py-12 md:py-16 lg:py-24 flex flex-col md:flex-row gap-6 items-start">
+            {/* Poster */}
+            <img
+              src={media.poster || "/placeholder.svg"}
+              alt={media.title}
+              className="w-48 h-auto rounded-lg shadow-2xl flex-shrink-0"
+            />
 
-                <div className="flex-1 space-y-4">
-                  <div>
-                    <h1 className="text-4xl font-bold text-foreground mb-2">{media.title}</h1>
-                    <div className="flex items-center space-x-4 text-muted-foreground">
-                      <span>{media.year}</span>
-                      <span>•</span>
-                      <span>{media.duration}</span>
-                      <span>•</span>
-                      <Badge variant="outline">{media.ageRating}</Badge>
-                      <span>•</span>
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 text-yellow-400 mr-1" />
-                        <span>{media.rating}/10</span>
-                      </div>
-                    </div>
-                  </div>
+            {/* Text & Buttons */}
+            <div className="flex-1 space-y-4">
+              {/* Optional SVG for title */}
+              <div className="flex items-center space-x-3">
+                {/* <img src="/path-to-title.svg" alt={media.title} className="h-12" /> */}
+                <h1 className="text-4xl md:text-5xl font-bold text-foreground">{media.title}</h1>
+              </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {media.genre.map((g) => (
-                      <Badge key={g} variant="secondary">
-                        {g}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  <p className="text-foreground text-lg leading-relaxed max-w-2xl">{media.synopsis}</p>
-
-                  <div className="flex items-center space-x-4">
-                    <Button size="lg" className="px-8">
-                      <Play className="mr-2 h-5 w-5" />
-                      Watch Now
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      onClick={() => setIsInWatchlist(!isInWatchlist)}
-                      className={isInWatchlist ? "bg-primary text-primary-foreground" : ""}
-                    >
-                      <Plus className="mr-2 h-5 w-5" />
-                      {isInWatchlist ? "In Watchlist" : "Add to Watchlist"}
-                    </Button>
-                    <Button size="lg" variant="outline">
-                      <Download className="mr-2 h-5 w-5" />
-                      Download
-                    </Button>
-                    <Button size="lg" variant="outline">
-                      <Share2 className="h-5 w-5" />
-                    </Button>
-                  </div>
+              <div className="flex items-center space-x-4 text-muted-foreground">
+                <span>{media.year}</span>
+                <span>•</span>
+                <span>{media.duration}</span>
+                <span>•</span>
+                <Badge variant="outline">{media.ageRating}</Badge>
+                <span>•</span>
+                <div className="flex items-center">
+                  <Star className="w-4 h-4 text-yellow-400 mr-1" />
+                  <span>{media.rating}/10</span>
                 </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {media.genre.map((g) => (
+                  <Badge key={g} variant="secondary">
+                    {g}
+                  </Badge>
+                ))}
+              </div>
+
+              <p className="text-foreground text-lg leading-relaxed max-w-2xl">{media.synopsis}</p>
+
+              <div className="flex items-center space-x-4">
+                <Button size="lg" variant="gradient" className="px-8">
+                  <Play className="mr-2 h-5 w-5" />
+                  Watch Now
+                </Button>
+                <Button
+                  variant="watchlist"
+                  onClick={() => setIsInWatchlist(!isInWatchlist)}
+                  className="group"
+                  size="lg"
+                >
+                  {isInWatchlist ? <Check className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+                  {/* Tooltip */}
+                  <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100
+                                  bg-black text-white text-xs font-medium py-1 px-3 rounded-lg whitespace-nowrap
+                                  pointer-events-none transition-all duration-200">
+                    {isInWatchlist ? "Added to Watchlist" : "Add to Watchlist"}
+                  </span>
+                </Button>
+                <div className="relative group">
+                <Button variant="normal" size="lg">
+                  <Download className="h-5 w-5" />
+                </Button>
+                <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 text-xs rounded-md bg-black text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  Download
+                </span>
+              </div>
+
+              <div className="relative group">
+                <Button variant="normal" size="lg">
+                  <Share2 className="h-5 w-5" />
+                </Button>
+                <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 text-xs rounded-md bg-black text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  Share
+                </span>
+              </div>
               </div>
             </div>
           </div>
+
         </div>
 
         {/* Content Tabs */}
