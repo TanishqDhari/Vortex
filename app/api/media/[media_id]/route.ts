@@ -10,10 +10,10 @@ export async function GET(_req: Request, { params }: Params) {
 
 export async function PUT(req: Request) {
   try {
-    const { media_id, views, title, media_desc, licence_expire_date } = await req.json();
+    const { media_id, title, release_year, duration, synopsis, image, licence_expire_date, views } = await req.json();
     const [result] = await db.execute(
-      "UPDATE media SET views=?, title=?, media_desc=?, licence_expire_date=? WHERE media_id=?",
-      [views, title, media_desc, licence_expire_date, media_id]
+      "UPDATE media SET title=?, release_year=?, duration=?, synopsis=?, image=?, licence_expire_date=?, views=? WHERE media_id=?",
+      [title, release_year, duration, synopsis, image, licence_expire_date, views, media_id]
     );
     return Response.json({ message: "Media updated", result });
   } catch (error) {
@@ -30,4 +30,3 @@ export async function DELETE(req: Request) {
     return Response.json({ error: (error as Error).message }, { status: 500 });
   }
 }
-

@@ -1,45 +1,86 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Sidebar } from "@/components/sidebar"
-import { MediaCard } from "@/components/media-card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter } from "lucide-react"
+import { useEffect, useMemo, useState } from "react";
+import { Sidebar } from "@/components/sidebar";
+import { MediaCard } from "@/components/media-card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Filter } from "lucide-react";
 
-const movies = Array.from({ length: 24 }, (_, i) => ({
-  id: i + 1,
-  title: `Movie ${i + 1}`,
-  year: 2020 + Math.floor(Math.random() * 5),
-  rating: 7.0 + Math.random() * 2,
-  image: `/placeholder.svg?height=400&width=300&query=movie poster ${i + 1}`,
-  genre: ["Action", "Drama", "Thriller"][Math.floor(Math.random() * 3)],
-  duration: `${90 + Math.floor(Math.random() * 60)}m`,
-  director: `Director ${i + 1}`,
-  cast: [`Actor ${i + 1}`, `Actor ${i + 2}`],
-}))
+type MediaRow = Record<string, any>;
+type MovieItem = {
+  id: number;
+  title: string;
+  year: number;
+  rating: number;
+  image: string;
+  genre: string | string[];
+  duration?: string;
+};
 
-const genres = ["All", "Action", "Comedy", "Drama", "Horror", "Romance", "Sci-Fi", "Thriller"]
-const years = ["All", "2024", "2023", "2022", "2021", "2020"]
-const ratings = ["All", "9+", "8+", "7+", "6+"]
+function minutesToDuration(minutes?: number | null): string | undefined {
+  if (!minutes && minutes !== 0) return undefined;
+  const hrs = Math.floor(Number(minutes) / 60);
+  const mins = Math.round(Number(minutes) % 60);
+  return `${hrs}h ${mins}m`;
+}
+
+function mapRowToMovie(row: MediaRow): MovieItem {
+  return {
+    id: Number(row.media_id ?? row.id ?? 0),
+    title: String(row.title ?? "Untitled"),
+    year: Number(row.release_year ?? row.year ?? 0),
+    rating: Number(row.rating ?? 0) || 0,
+    image: String(row.image ?? row.poster_url ?? "/placeholder.svg"),
+    genre: row.genre ?? row.genres ?? "",
+    duration: typeof row.duration === "number" ? minutesToDuration(row.duration) : String(row.duration ?? ""),
+  };
+}
+
+const genres = ["All", "Action", "Comedy", "Drama", "Horror", "Romance", "Sci-Fi", "Thriller"];
+const years = ["All", "2024", "2023", "2022", "2021", "2020"];
+const ratings = ["All", "9+", "8+", "7+", "6+"];
 
 export default function MoviesPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedGenre, setSelectedGenre] = useState("All")
-  const [selectedYear, setSelectedYear] = useState("All")
-  const [selectedRating, setSelectedRating] = useState("All")
-  const [sortBy, setSortBy] = useState("popularity")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState("All");
+  const [selectedYear, setSelectedYear] = useState("All");
+  const [selectedRating, setSelectedRating] = useState("All");
+  const [sortBy, setSortBy] = useState("popularity");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [movies, setMovies] = useState<MovieItem[]>([]);
 
-  const filteredMovies = movies.filter((movie) => {
-    const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesGenre = selectedGenre === "All" || movie.genre === selectedGenre
-    const matchesYear = selectedYear === "All" || movie.year.toString() === selectedYear
-    const matchesRating = selectedRating === "All" || movie.rating >= Number.parseInt(selectedRating)
-    return matchesSearch && matchesGenre && matchesYear && matchesRating
-  })
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      try {
+        const res = await fetch("/api/media", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to load media");
+        const rows: MediaRow[] = await res.json();
+        if (active) setMovies(rows.map(mapRowToMovie).filter((m) => m.id));
+      } catch {
+        if (active) setMovies([]);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const filteredMovies = useMemo(
+    () =>
+      movies.filter((movie) => {
+        const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesGenre = selectedGenre === "All" || movie.genre === selectedGenre;
+        const matchesYear = selectedYear === "All" || movie.year.toString() === selectedYear;
+        const matchesRating = selectedRating === "All" || movie.rating >= Number.parseInt(selectedRating);
+        return matchesSearch && matchesGenre && matchesYear && matchesRating;
+      }),
+    [movies, searchQuery, selectedGenre, selectedYear, selectedRating]
+  );
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -153,8 +194,7 @@ export default function MoviesPage() {
               {filteredMovies.map((movie) => (
                 <div
                   key={movie.id}
-                  className="flex items-center space-x-4 p-4 bg-card rounded-lg hover:bg-card/80 transition-colors"
-                >
+                  className="flex items-center space-x-4 p-4 bg-card rounded-lg hover:bg-card/80 transition-colors">
                   <img
                     src={movie.image || "/placeholder.svg"}
                     alt={movie.title}
@@ -179,5 +219,5 @@ export default function MoviesPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

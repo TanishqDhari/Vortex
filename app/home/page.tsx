@@ -1,64 +1,123 @@
-'use client'
+"use client";
 
-import { Sidebar } from "@/components/sidebar"
-import { HeroCarousel } from "@/components/hero-carousel"
-import { HorizontalCarousel } from "@/components/movie-carousel"
-import { MediaCard } from "@/components/media-card"
+import { useEffect, useState } from "react";
+import { Sidebar } from "@/components/sidebar";
+import { HeroCarousel } from "@/components/hero-carousel";
+import { HorizontalCarousel } from "@/components/movie-carousel";
+import { MediaCard } from "@/components/media-card";
 
-// Mock data (your existing arrays)
-const featuredContent = [
-  {
-    id: 1,
-    title: "The Dark Knight",
-    year: 2008,
-    rating: 9.0,
-    duration: "2h 32m",
-    synopsis: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham...",
-    image: "/dark-knight-poster.png",
-    genre: ["Action", "Crime", "Drama"],
-  },
-  {
-    id: 2,
-    title: "Inception",
-    year: 2010,
-    rating: 8.8,
-    duration: "2h 28m",
-    synopsis: "A thief who steals corporate secrets through dream-sharing technology...",
-    image: "/inception-movie-poster.png",
-    genre: ["Action", "Sci-Fi", "Thriller"],
-  },
-  {
-    id: 3,
-    title: "Interstellar",
-    year: 2014,
-    rating: 8.6,
-    duration: "2h 49m",
-    synopsis: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival...",
-    image: "/interstellar-movie-poster.jpg",
-    genre: ["Adventure", "Drama", "Sci-Fi"],
-  },
-]
+type MediaRow = Record<string, any>;
 
-const trendingMovies = Array.from({ length: 8 }, (_, i) => ({
-  id: i + 1,
-  title: `Movie ${i + 1}`,
-  year: 2024,
-  rating: 8.5 + Math.random(),
-  image: `/placeholder.svg?height=400&width=300&query=movie poster ${i + 1}`,
-  genre: ["Action", "Drama"],
-}))
+type HeroItem = {
+  id: number;
+  title: string;
+  year: number;
+  rating: number;
+  duration: string;
+  synopsis: string;
+  image: string;
+  genre: string[];
+};
 
-const continueWatching = Array.from({ length: 6 }, (_, i) => ({
-  id: i + 1,
-  title: `Series ${i + 1}`,
-  year: 2024,
-  rating: 8.0 + Math.random(),
-  image: `/placeholder.svg?height=400&width=300&query=tv series poster ${i + 1}`,
-  genre: ["Drama", "Thriller"],
-  progress: Math.floor(Math.random() * 100),
-}))
+type CardItem = {
+  id: number;
+  title: string;
+  year: number;
+  rating: number;
+  image: string;
+  genre: string[] | string;
+  progress?: number;
+};
+
+function minutesToDuration(minutes?: number | null): string {
+  if (!minutes || Number.isNaN(minutes)) return "";
+  const hrs = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  return `${hrs}h ${mins}m`;
+}
+
+function parseGenres(value: unknown): string[] | string {
+  if (!value) return [];
+  if (Array.isArray(value)) return value as string[];
+  if (typeof value === "string") return value.includes(",") ? value.split(",").map((g) => g.trim()) : value;
+  return [];
+}
+
+function mapRowToCard(row: MediaRow): CardItem {
+  return {
+    id: Number(row.media_id ?? row.id ?? 0),
+    title: String(row.title ?? row.name ?? "Untitled"),
+    year: Number(row.release_year ?? row.year ?? 0),
+    rating: Number(row.rating ?? row.score ?? 0) || 0,
+    image: String(row.poster_url ?? row.image ?? "/placeholder.svg"),
+    genre: parseGenres(row.genre ?? row.genres ?? []),
+  };
+}
+
+function mapRowToHero(row: MediaRow): HeroItem {
+  const card = mapRowToCard(row);
+  const durationMinutes = Number(row.duration_minutes ?? row.duration ?? 0) || undefined;
+  return {
+    id: card.id,
+    title: card.title,
+    year: card.year,
+    rating: card.rating,
+    duration: minutesToDuration(durationMinutes),
+    synopsis: String(row.media_desc ?? row.synopsis ?? ""),
+    image: card.image,
+    genre: Array.isArray(card.genre) ? card.genre : card.genre ? [card.genre] : [],
+  };
+}
 
 export default function HomePage() {
+  const [featuredContent, setFeaturedContent] = useState<HeroItem[]>([]);
+  const [trendingMovies, setTrendingMovies] = useState<CardItem[]>([]);
+  const [continueWatching, setContinueWatching] = useState<CardItem[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function load() {
+      try {
+        const [mediaRes, watchRes] = await Promise.all([
+          fetch("/api/media", { cache: "no-store" }),
+          // Replace `1` with the actual authenticated user id when available
+          fetch(`/api/user/1/watch-history`, { cache: "no-store" }).catch(() => null),
+        ]);
+
+        if (!mediaRes.ok) throw new Error("Failed to load media");
+        const mediaRows: MediaRow[] = await mediaRes.json();
+
+        // Trending/Popular/Recommended all derive from media for now
+        const cards = mediaRows.map(mapRowToCard).filter((c) => c.id);
+
+        if (isMounted) {
+          setTrendingMovies(cards);
+          // Use top 3 as featured
+          setFeaturedContent(mediaRows.slice(0, 3).map(mapRowToHero));
+        }
+
+        if (watchRes && watchRes.ok) {
+          const watchRows: MediaRow[] = await watchRes.json();
+          if (isMounted) setContinueWatching(watchRows.map(mapRowToCard));
+        } else if (isMounted) {
+          setContinueWatching([]);
+        }
+      } catch (e) {
+        // Swallow errors for now; UI will render empty sections
+        if (isMounted) {
+          setFeaturedContent([]);
+          setTrendingMovies([]);
+          setContinueWatching([]);
+        }
+      }
+    }
+
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
@@ -67,7 +126,7 @@ export default function HomePage() {
       {/* Main Content */}
       <main className="flex-1 ml-16 overflow-hidden">
         {/* Hero Carousel */}
-        <HeroCarousel content={featuredContent} />
+        {featuredContent.length > 0 && <HeroCarousel content={featuredContent} />}
 
         {/* Content Sections */}
         <div className="px-6 py-8 space-y-12">
@@ -113,5 +172,5 @@ export default function HomePage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
