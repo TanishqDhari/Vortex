@@ -14,7 +14,6 @@ export function HorizontalCarousel({ children, className }: HorizontalCarouselPr
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  // Refs for drag-to-scroll functionality
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
   const scrollLeftStartRef = useRef(0);
@@ -46,8 +45,8 @@ export function HorizontalCarousel({ children, className }: HorizontalCarouselPr
     carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   };
 
-  // --- Drag Event Handlers ---
   const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest('button')) return;
     const node = carouselRef.current;
     if (!node) return;
     isDraggingRef.current = true;
@@ -59,9 +58,9 @@ export function HorizontalCarousel({ children, className }: HorizontalCarouselPr
     if (!isDraggingRef.current || !carouselRef.current) return;
     e.preventDefault();
     const x = e.pageX - carouselRef.current.offsetLeft;
-    const walk = (x - startXRef.current) * 1.5; // Multiply for faster drag
+    const walk = (x - startXRef.current) * 1.5;
     carouselRef.current.scrollLeft = scrollLeftStartRef.current - walk;
-    checkScrollability(); // Update arrow states while dragging
+    checkScrollability();
   };
 
   const handleMouseUpOrLeave = () => {
@@ -69,7 +68,7 @@ export function HorizontalCarousel({ children, className }: HorizontalCarouselPr
   };
 
   return (
-    <div className={cn('relative group overflow-hidden', className)}>
+    <div className={cn('relative group/carousel', className)}>
       <div
         ref={carouselRef}
         onMouseDown={handleMouseDown}
@@ -77,24 +76,29 @@ export function HorizontalCarousel({ children, className }: HorizontalCarouselPr
         onMouseUp={handleMouseUpOrLeave}
         onMouseLeave={handleMouseUpOrLeave}
         className={cn(
-          'flex gap-2 sm:gap-4 overflow-x-auto scroll-smooth hide-scrollbar overscroll-x-contain',
-          'cursor-grab active:cursor-grabbing select-none' // Add cursor and text selection styles
+          'flex overflow-x-auto overflow-y-visible scroll-smooth hide-scrollbar',
+          'cursor-grab active:cursor-grabbing select-none',
+          'gap-3 sm:gap-4',
+          'py-12 px-4 sm:px-8'
         )}
       >
         {children.map((child, index) => (
-          <div 
-            key={index} 
-            className="flex-shrink-0 min-w-[150px] w-1/3 sm:w-1/4 md:w-1/5 lg:w-1/6 xl:w-1/8 py-4"
+          <div
+            key={index}
+            className={cn(
+              'group relative flex-shrink-0 w-40 sm:w-44 md:w-48 lg:w-52',
+              'lg:first:[&_.popover]:left-0 lg:first:[&_.popover]:-translate-x-0',
+              'lg:last:[&_.popover]:right-0 lg:last:[&_.popover]:left-auto lg:last:[&_.popover]:-translate-x-0'
+            )}
           >
             {child}
           </div>
         ))}
       </div>
 
-      {/* Left Arrow */}
       <button
         className={cn(
-          'absolute left-0 top-0 bottom-0 z-10 flex items-center justify-center w-16 bg-gradient-to-r from-black/60 to-transparent text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100',
+          'absolute left-0 top-0 bottom-0 z-30 w-16 bg-gradient-to-r from-background via-background/80 to-transparent text-white opacity-0 transition-opacity duration-300 group-hover/carousel:opacity-100',
           !canScrollLeft && 'hidden'
         )}
         onClick={() => scroll('left')}
@@ -103,10 +107,9 @@ export function HorizontalCarousel({ children, className }: HorizontalCarouselPr
         <ChevronLeft className="w-10 h-10" />
       </button>
 
-      {/* Right Arrow */}
       <button
         className={cn(
-          'absolute right-0 top-0 bottom-0 z-10 flex items-center justify-center w-16 bg-gradient-to-l from-black/60 to-transparent text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100',
+          'absolute right-0 top-0 bottom-0 z-30 w-16 bg-gradient-to-l from-background via-background/80 to-transparent text-white opacity-0 transition-opacity duration-300 group-hover/carousel:opacity-100',
           !canScrollRight && 'hidden'
         )}
         onClick={() => scroll('right')}

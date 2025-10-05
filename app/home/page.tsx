@@ -63,7 +63,7 @@ function mapRowToHero(row: MediaRow): HeroItem {
     year: card.year,
     rating: card.rating,
     duration: minutesToDuration(durationMinutes),
-    synopsis: String(row.media_desc ?? row.synopsis ?? ""),
+    synopsis: String(row.synopsis ?? ""),
     image: card.image,
     genre: Array.isArray(card.genre) ? card.genre : card.genre ? [card.genre] : [],
   };
@@ -120,27 +120,20 @@ export default function HomePage() {
   }, []);
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
       <Sidebar />
-
-      {/* Main Content */}
-      <main className="flex-1 ml-16 overflow-hidden">
-        {/* Hero Carousel */}
+      <main className="flex-1 ml-16 overflow-y-auto">
         {featuredContent.length > 0 && <HeroCarousel content={featuredContent} />}
 
-        {/* Content Sections */}
-        <div className="px-6 py-8 space-y-12">
-          {/* Continue Watching */}
+        <div className="px-6 py-8 space-y-16">
           <section>
             <h2 className="text-white text-xl font-semibold mb-4">Continue Watching</h2>
             <HorizontalCarousel>
               {continueWatching.map((item) => (
-                <MediaCard key={item.id} {...item} showProgress />
+                <MediaCard key={item.id} {...item} />
               ))}
             </HorizontalCarousel>
           </section>
 
-          {/* Trending Now */}
           <section>
             <h2 className="text-white text-xl font-semibold mb-4">Trending Now</h2>
             <HorizontalCarousel>
@@ -150,22 +143,11 @@ export default function HomePage() {
             </HorizontalCarousel>
           </section>
 
-          {/* Recommended For You */}
           <section>
             <h2 className="text-white text-xl font-semibold mb-4">Recommended for You</h2>
             <HorizontalCarousel>
               {trendingMovies.slice(0, 8).map((item) => (
                 <MediaCard key={`rec-${item.id}`} {...item} />
-              ))}
-            </HorizontalCarousel>
-          </section>
-
-          {/* Popular Movies */}
-          <section>
-            <h2 className="text-white text-xl font-semibold mb-4">Popular Movies</h2>
-            <HorizontalCarousel>
-              {trendingMovies.slice(2, 10).map((item) => (
-                <MediaCard key={`pop-${item.id}`} {...item} />
               ))}
             </HorizontalCarousel>
           </section>
