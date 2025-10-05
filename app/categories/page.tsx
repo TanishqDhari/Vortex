@@ -1,84 +1,59 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Sidebar } from "@/components/sidebar"
-import { MediaCard } from "@/components/media-card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { ChevronRight } from "lucide-react"
-import { HorizontalCarousel } from "@/components/movie-carousel"
+import { useEffect, useState } from "react";
+import { Sidebar } from "@/components/sidebar";
+import { MediaCard } from "@/components/media-card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChevronRight } from "lucide-react";
+import { HorizontalCarousel } from "@/components/movie-carousel";
 
-const categories = [
-  {
-    id: "action",
-    name: "Action",
-    description: "High-octane thrills and adrenaline-pumping adventures",
-    color: "bg-red-500/20 border-red-500/30",
-    count: 156,
-  },
-  {
-    id: "comedy",
-    name: "Comedy",
-    description: "Laugh-out-loud moments and feel-good entertainment",
-    color: "bg-yellow-500/20 border-yellow-500/30",
-    count: 89,
-  },
-  {
-    id: "drama",
-    name: "Drama",
-    description: "Compelling stories and emotional journeys",
-    color: "bg-blue-500/20 border-blue-500/30",
-    count: 203,
-  },
-  {
-    id: "horror",
-    name: "Horror",
-    description: "Spine-chilling scares and supernatural thrills",
-    color: "bg-purple-500/20 border-purple-500/30",
-    count: 67,
-  },
-  {
-    id: "romance",
-    name: "Romance",
-    description: "Love stories and heartwarming relationships",
-    color: "bg-pink-500/20 border-pink-500/30",
-    count: 94,
-  },
-  {
-    id: "sci-fi",
-    name: "Sci-Fi",
-    description: "Futuristic worlds and technological wonders",
-    color: "bg-green-500/20 border-green-500/30",
-    count: 78,
-  },
-  {
-    id: "thriller",
-    name: "Thriller",
-    description: "Edge-of-your-seat suspense and mystery",
-    color: "bg-orange-500/20 border-orange-500/30",
-    count: 112,
-  },
-  {
-    id: "documentary",
-    name: "Documentary",
-    description: "Real stories and educational content",
-    color: "bg-teal-500/20 border-teal-500/30",
-    count: 45,
-  },
-]
+type Genre = {
+  genre_id: number;
+  title: string;
+  description?: string;
+  media_count?: number;
+};
 
-const featuredContent = Array.from({ length: 26 }, (_, i) => ({
-  id: i + 1,
-  title: `Featured ${i + 1}`,
-  year: 2024,
-  rating: 8.0 + Math.random(),
-  image: `/placeholder.svg?height=400&width=300&query=featured content ${i + 1}`,
-  genre: ["Featured"],
-}))
+type Media = {
+  id: number;
+  title: string;
+  year: number;
+  rating: number;
+  duration: string;
+  synopsis: string;
+  image: string;
+  genre: string[];
+};
 
 export default function CategoriesPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [categories, setCategories] = useState<Genre[]>([]);
+  const [featuredContent, setFeaturedContent] = useState<Media[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [genreRes, mediaRes] = await Promise.all([fetch("/api/genre"), fetch("/api/media")]);
+
+        const genresData = await genreRes.json();
+        const mediaData = await mediaRes.json();
+
+        setCategories(genresData);
+        setFeaturedContent(mediaData);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return <div className="text-white p-8">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -101,17 +76,20 @@ export default function CategoriesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {categories.map((category) => (
                     <Card
-                      key={category.id}
-                      className={`cursor-pointer hover:scale-105 transition-transform duration-200 ${category.color}`}
-                      onClick={() => setSelectedCategory(category.id)}
-                    >
+                      key={category.genre_id}
+                      className="cursor-pointer hover:scale-105 transition-transform duration-200 bg-card/40"
+                      onClick={() => setSelectedCategory(category.title)}>
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-xl font-semibold text-foreground">{category.name}</h3>
+                          <h3 className="text-xl font-semibold text-foreground">{category.title}</h3>
                           <ChevronRight className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <p className="text-sm text-muted-foreground mb-3">{category.description}</p>
-                        <Badge variant="secondary">{category.count} titles</Badge>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {category.description || "Explore this genre"}
+                        </p>
+                        {category.media_count !== undefined && (
+                          <Badge variant="secondary">{category.media_count} titles</Badge>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -119,50 +97,13 @@ export default function CategoriesPage() {
               </div>
 
               {/* Featured This Week */}
-              {/* <div>
+              <div>
                 <h2 className="text-2xl font-semibold text-foreground mb-6">Featured This Week</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                <HorizontalCarousel>
                   {featuredContent.map((item) => (
                     <MediaCard key={item.id} {...item} />
                   ))}
-                </div>
-              </div> */}
-              <HorizontalCarousel>
-                {featuredContent.map((item) => (
-                  <MediaCard key={item.id} {...item} />
-                ))}
-              </HorizontalCarousel>
-
-
-              {/* Quick Filters */}
-              <div>
-                <h2 className="text-2xl font-semibold text-foreground mb-6">Quick Filters</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Card className="cursor-pointer hover:bg-card/80 transition-colors">
-                    <CardContent className="p-4 text-center">
-                      <h3 className="font-medium text-foreground">New Releases</h3>
-                      <p className="text-sm text-muted-foreground">Latest additions</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="cursor-pointer hover:bg-card/80 transition-colors">
-                    <CardContent className="p-4 text-center">
-                      <h3 className="font-medium text-foreground">Top Rated</h3>
-                      <p className="text-sm text-muted-foreground">Highest rated content</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="cursor-pointer hover:bg-card/80 transition-colors">
-                    <CardContent className="p-4 text-center">
-                      <h3 className="font-medium text-foreground">Trending</h3>
-                      <p className="text-sm text-muted-foreground">Popular right now</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="cursor-pointer hover:bg-card/80 transition-colors">
-                    <CardContent className="p-4 text-center">
-                      <h3 className="font-medium text-foreground">Award Winners</h3>
-                      <p className="text-sm text-muted-foreground">Critically acclaimed</p>
-                    </CardContent>
-                  </Card>
-                </div>
+                </HorizontalCarousel>
               </div>
             </div>
           ) : (
@@ -170,11 +111,9 @@ export default function CategoriesPage() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-semibold text-foreground">
-                    {categories.find((c) => c.id === selectedCategory)?.name}
-                  </h2>
+                  <h2 className="text-2xl font-semibold text-foreground">{selectedCategory}</h2>
                   <p className="text-muted-foreground">
-                    {categories.find((c) => c.id === selectedCategory)?.description}
+                    {categories.find((c) => c.title === selectedCategory)?.description}
                   </p>
                 </div>
                 <Button variant="outline" onClick={() => setSelectedCategory(null)}>
@@ -183,14 +122,16 @@ export default function CategoriesPage() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {featuredContent.map((item) => (
-                  <MediaCard key={item.id} {...item} />
-                ))}
+                {featuredContent
+                  .filter((m) => m.genre.includes(selectedCategory!))
+                  .map((item) => (
+                    <MediaCard key={item.id} {...item} />
+                  ))}
               </div>
             </div>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }

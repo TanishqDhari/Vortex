@@ -3,7 +3,17 @@ import db from "@/app/api/lib/db";
 
 export async function GET() {
   try {
-    const [rows] = await db.query("SELECT * FROM genre");
+    const [rows] = await db.query(`
+    SELECT 
+      g.*,
+      (
+        SELECT COUNT(*)
+        FROM media_genre mg
+        WHERE mg.genre_id = g.genre_id
+      ) AS media_count
+    FROM genre g;
+  `);
+
     return NextResponse.json(rows);
   } catch (err) {
     const error = err as Error;

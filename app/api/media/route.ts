@@ -1,9 +1,38 @@
 import { NextResponse } from "next/server";
 import db from "@/app/api/lib/db";
+import { RowDataPacket } from "mysql2";
 
 export async function GET() {
   try {
-    const [rows] = await db.query("SELECT * FROM media");
+    const [rows] = await db.query<RowDataPacket[]>(`
+  SELECT
+    m.*,
+    (
+      SELECT JSON_ARRAYAGG(g.title)
+      FROM media_genre mg
+      JOIN genre g ON g.genre_id = mg.genre_id
+      WHERE mg.media_id = m.media_id
+    ) AS genres,
+    (
+      SELECT JSON_ARRAYAGG(
+        JSON_OBJECT(
+          'name', CONCAT(c.fname, ' ', c.lname),
+          'role', ct.crew_role,
+          'image', c.image
+        )
+      )
+      FROM contribution ct
+      JOIN crew c ON c.crew_id = ct.crew_id
+      WHERE ct.media_id = m.media_id
+    ) AS cast,
+    (
+      SELECT AVG(r.rating)
+      FROM review r
+      WHERE r.media_id = m.media_id
+    ) AS rating
+  FROM media m;
+`);
+
     return NextResponse.json(rows);
   } catch (err) {
     const error = err as Error;

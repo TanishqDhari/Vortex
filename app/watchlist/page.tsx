@@ -1,45 +1,64 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Sidebar } from "@/components/sidebar"
-import { MediaCard } from "@/components/media-card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Plus, Bookmark } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import { Sidebar } from "@/components/sidebar";
+import { MediaCard } from "@/components/media-card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Plus, Bookmark } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-// Mock watchlist data
-const watchlistItems = Array.from({ length: 16 }, (_, i) => ({
-  id: i + 1,
-  title: `Watchlist Item ${i + 1}`,
-  year: 2020 + Math.floor(Math.random() * 5),
-  rating: 7.0 + Math.random() * 2,
-  image: `/placeholder.svg?height=400&width=300&query=watchlist item ${i + 1}`,
-  genre: ["Action", "Drama", "Comedy", "Thriller"][Math.floor(Math.random() * 4)],
-  type: Math.random() > 0.5 ? "movie" : "tv",
-  addedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-}))
+type WatchlistItem = {
+  id: number;
+  title: string;
+  year: number;
+  rating: number;
+  image: string;
+  genre: string[];
+  type: "movie" | "tv";
+  addedAt: string;
+};
 
-const customLists = [
-  { id: 1, name: "Weekend Movies", count: 12, isPublic: false },
-  { id: 2, name: "Sci-Fi Collection", count: 8, isPublic: true },
-  { id: 3, name: "Comedy Specials", count: 15, isPublic: false },
-]
+type CustomList = {
+  id: number;
+  name: string;
+  count: number;
+  isPublic: boolean;
+};
 
 export default function WatchlistPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedType, setSelectedType] = useState("all")
-  const [selectedGenre, setSelectedGenre] = useState("all")
-  const [sortBy, setSortBy] = useState("added")
+  const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
+  const [customLists, setCustomLists] = useState<CustomList[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedGenre, setSelectedGenre] = useState("all");
+  const [sortBy, setSortBy] = useState("added");
+
+  useEffect(() => {
+    async function fetchWatchlist() {
+      try {
+        const res = await fetch("/api/watchlist"); // Your API endpoint
+        if (!res.ok) throw new Error("Failed to load watchlist");
+        const data = await res.json();
+        setWatchlistItems(data.items);
+        setCustomLists(data.lists);
+      } catch (err) {
+        console.error(err);
+        setWatchlistItems([]);
+        setCustomLists([]);
+      }
+    }
+    fetchWatchlist();
+  }, []);
 
   const filteredItems = watchlistItems.filter((item) => {
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesType = selectedType === "all" || item.type === selectedType
-    const matchesGenre = selectedGenre === "all" || item.genre === selectedGenre
-    return matchesSearch && matchesType && matchesGenre
-  })
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = selectedType === "all" || item.type === selectedType;
+    const matchesGenre = selectedGenre === "all" || item.genre.includes(selectedGenre);
+    return matchesSearch && matchesType && matchesGenre;
+  });
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -57,15 +76,15 @@ export default function WatchlistPage() {
 
             {/* Search and Filters */}
             <div className="flex flex-col lg:flex-row gap-4">
-             <div className="flex-1 relative h-10">
-  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
-  <Input
-    placeholder="Search your watchlist..."
-    value={searchQuery}
-    onChange={(e) => setSearchQuery(e.target.value)}
-    className="pl-10 h-full text-sm leading-none"
-  />
-</div>
+              <div className="flex-1 relative h-10">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
+                <Input
+                  placeholder="Search your watchlist..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-full text-sm leading-none"
+                />
+              </div>
 
               <div className="flex flex-wrap gap-4">
                 {/* Type Filter */}
@@ -133,8 +152,7 @@ export default function WatchlistPage() {
                   {customLists.map((list) => (
                     <div
                       key={list.id}
-                      className="flex items-center justify-between p-3 bg-card/50 rounded-lg hover:bg-card/80 transition-colors cursor-pointer"
-                    >
+                      className="flex items-center justify-between p-3 bg-card/50 rounded-lg hover:bg-card/80 transition-colors cursor-pointer">
                       <div>
                         <h4 className="font-medium text-foreground">{list.name}</h4>
                         <p className="text-xs text-muted-foreground">
@@ -158,7 +176,6 @@ export default function WatchlistPage() {
                   <div key={item.id}>
                     <MediaCard {...item} />
                     <div className="mt-2 space-y-1">
-                      {/* Removed type badge */}
                       <p className="text-xs text-muted-foreground">Added {item.addedAt}</p>
                     </div>
                   </div>
@@ -169,5 +186,5 @@ export default function WatchlistPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

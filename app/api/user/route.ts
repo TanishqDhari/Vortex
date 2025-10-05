@@ -15,11 +15,12 @@ export async function POST(req: Request) {
   try {
     const { email, fname, lname, login_type, user_password, dob } = await req.json();
     const [result] = await db.execute(
-      "INSERT INTO users (email, fname, lname, login_type, user_password, dob) VALUES (?, ?, ?, ?, ?, ?)",
-      [email, fname, lname, login_type, user_password, dob]
+      "INSERT INTO users (email, fname, lname,login_type , user_password, dob) VALUES (?, ?, ?,?, ?, ?)",
+      [email, fname, lname, user_password, dob]
     );
     return Response.json({ message: "User created", result });
   } catch (error) {
+    console.log((error as Error).message);
     return Response.json({ error: (error as Error).message }, { status: 500 });
   }
 }

@@ -5,13 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import {
-  IconBrandFacebook,
-  IconBrandGoogle,
-  IconBrandX,
-  IconEye,
-  IconEyeOff,
-} from "@tabler/icons-react";
+import { IconBrandFacebook, IconBrandGoogle, IconBrandX, IconEye, IconEyeOff } from "@tabler/icons-react";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -23,8 +17,7 @@ export default function LoginPage() {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const handleChange = (field: string, value: string | boolean) =>
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (field: string, value: string | boolean) => setFormData((prev) => ({ ...prev, [field]: value }));
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -33,6 +26,35 @@ export default function LoginPage() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  // const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!validateForm()) return;
+
+  //   setIsLoading(true);
+  //   try {
+  //     const res = await fetch("/api/user/check-email", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ email: formData.email }),
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (!res.ok || !data.exists) {
+  //       alert("Email not found. Please sign up first.");
+  //       return;
+  //     }
+
+  //     // Email exists, proceed
+  //     window.location.href = "/home";
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert(err instanceof Error ? err.message : String(err));
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,10 +69,7 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen flex justify-center">
       {/* Background */}
-      <div
-        className="fixed inset-0 bg-cover bg-center z-0"
-        style={{ backgroundImage: "url('/bg.jpg')" }}
-      >
+      <div className="fixed inset-0 bg-cover bg-center z-0" style={{ backgroundImage: "url('/bg.jpg')" }}>
         <div className="absolute inset-0 bg-black/75"></div>
       </div>
 
@@ -58,22 +77,13 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md px-4 py-8">
         {/* Logo */}
         <div className="flex items-center justify-center mb-6">
-          <img
-            src="/vortex_logo_purple.svg"
-            alt="Vortex Logo"
-            width={250}
-            height={180}
-          />
+          <img src="/vortex_logo_purple.svg" alt="Vortex Logo" width={250} height={180} />
         </div>
 
         {/* Card */}
         <div className="shadow-input mx-auto w-full rounded-none p-6 md:rounded-2xl md:p-8 bg-black/90">
-          <h2 className="text-xl font-bold text-neutral-200 mb-1 text-center">
-            Welcome Back
-          </h2>
-          <p className="text-sm text-neutral-300 mb-6 text-center">
-            Sign in to continue your cinematic journey
-          </p>
+          <h2 className="text-xl font-bold text-neutral-200 mb-1 text-center">Welcome Back</h2>
+          <p className="text-sm text-neutral-300 mb-6 text-center">Sign in to continue your cinematic journey</p>
 
           <form className="space-y-4" onSubmit={handleLogin}>
             {/* Email */}
@@ -86,9 +96,7 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
               />
-              {errors.email && (
-                <p className="text-xs text-red-500">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
             </LabelInputContainer>
 
             {/* Password */}
@@ -105,18 +113,11 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 hover:text-neutral-100"
-                >
-                  {showPassword ? (
-                    <IconEyeOff size={18} />
-                  ) : (
-                    <IconEye size={18} />
-                  )}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 hover:text-neutral-100">
+                  {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-xs text-red-500">{errors.password}</p>
-              )}
+              {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
             </LabelInputContainer>
 
             {/* Remember Me & Forgot Password */}
@@ -130,20 +131,13 @@ export default function LoginPage() {
                 />
                 <Label className="text-neutral-300">Remember me</Label>
               </div>
-              <Link
-                href="/forgot-password"
-                className="text-primary hover:underline"
-              >
+              <Link href="/forgot-password" className="text-primary hover:underline">
                 Forgot password?
               </Link>
             </div>
 
             {/* Sign In Button */}
-            <Button
-              type="submit"
-              className="w-full bg-primary text-white"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full bg-primary text-white" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
@@ -157,14 +151,8 @@ export default function LoginPage() {
 
           {/* Social Buttons */}
           <div className="flex justify-center gap-3">
-            <SocialIconButton
-              icon={<IconBrandGoogle size={18} />}
-              label="Google"
-            />
-            <SocialIconButton
-              icon={<IconBrandFacebook size={18} />}
-              label="Facebook"
-            />
+            <SocialIconButton icon={<IconBrandGoogle size={18} />} label="Google" />
+            <SocialIconButton icon={<IconBrandFacebook size={18} />} label="Facebook" />
             <SocialIconButton icon={<IconBrandX size={18} />} label="X" />
           </div>
 
@@ -182,31 +170,16 @@ export default function LoginPage() {
 }
 
 /* Small Social Button */
-const SocialIconButton = ({
-  icon,
-  label,
-}: {
-  icon: React.ReactNode;
-  label: string;
-}) => (
+const SocialIconButton = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
   <button
     type="button"
     aria-label={label}
-    className="group relative flex h-9 w-30 items-center justify-center rounded-md bg-neutral-800 text-white shadow-sm hover:bg-neutral-700"
-  >
+    className="group relative flex h-9 w-30 items-center justify-center rounded-md bg-neutral-800 text-white shadow-sm hover:bg-neutral-700">
     {icon}
   </button>
 );
 
 /* Container for Label + Input */
-const LabelInputContainer = ({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => (
-  <div className={`flex w-full flex-col space-y-2 ${className || ""}`}>
-    {children}
-  </div>
+const LabelInputContainer = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <div className={`flex w-full flex-col space-y-2 ${className || ""}`}>{children}</div>
 );

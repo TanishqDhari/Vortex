@@ -25,7 +25,7 @@ type CardItem = {
   year: number;
   rating: number;
   image: string;
-  genre: string[] | string;
+  genre: string[];
   progress?: number;
 };
 
@@ -36,21 +36,21 @@ function minutesToDuration(minutes?: number | null): string {
   return `${hrs}h ${mins}m`;
 }
 
-function parseGenres(value: unknown): string[] | string {
-  if (!value) return [];
-  if (Array.isArray(value)) return value as string[];
-  if (typeof value === "string") return value.includes(",") ? value.split(",").map((g) => g.trim()) : value;
-  return [];
-}
+// function parseGenres(value: unknown): string[] | string {
+//   if (!value) return [];
+//   if (Array.isArray(value)) return value as string[];
+//   if (typeof value === "string") return value.includes(",") ? value.split(",").map((g) => g.trim()) : value;
+//   return [];
+// }
 
 function mapRowToCard(row: MediaRow): CardItem {
   return {
     id: Number(row.media_id ?? row.id ?? 0),
     title: String(row.title ?? row.name ?? "Untitled"),
-    year: Number(row.release_year ?? row.year ?? 0),
+    year: Number(row.release_date.slice(0, 4) ?? 0),
     rating: Number(row.rating ?? row.score ?? 0) || 0,
     image: String(row.poster_url ?? row.image ?? "/placeholder.svg"),
-    genre: parseGenres(row.genre ?? row.genres ?? []),
+    genre: row.genre ?? row.genres ?? [],
   };
 }
 
