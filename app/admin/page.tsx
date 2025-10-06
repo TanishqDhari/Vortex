@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -27,24 +27,43 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [users, setUsers] = useState<any[]>([])
+  const [media, setMedia] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch data from APIs
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [usersRes, mediaRes] = await Promise.all([
+          fetch("/api/user"),
+          fetch("/api/media")
+        ]);
+
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          setUsers(usersData);
+        }
+
+        if (mediaRes.ok) {
+          const mediaData = await mediaRes.json();
+          setMedia(mediaData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   const stats = [
-    { title: "Total Users", value: "12,847", change: "+12%", icon: Users },
+    { title: "Total Users", value: users.length.toString(), change: "+12%", icon: Users },
     { title: "Active Subscriptions", value: "8,234", change: "+8%", icon: TrendingUp },
-    { title: "Total Content", value: "2,456", change: "+24", icon: Film },
+    { title: "Total Content", value: media.length.toString(), change: "+24", icon: Film },
     { title: "Monthly Revenue", value: "$89,234", change: "+15%", icon: DollarSign },
-  ]
-
-  const users = [
-    { id: 1, name: "John Doe", email: "john@example.com", subscription: "Premium", status: "Active", joinDate: "2024-01-15" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", subscription: "Standard", status: "Active", joinDate: "2024-02-20" },
-    { id: 3, name: "Mike Johnson", email: "mike@example.com", subscription: "Basic", status: "Inactive", joinDate: "2024-03-10" },
-  ]
-
-  const content = [
-    { id: 1, title: "The Dark Knight", type: "Movie", genre: "Action", rating: "9.0", status: "Published", addedDate: "2024-01-10" },
-    { id: 2, title: "Breaking Bad", type: "TV Show", genre: "Drama", rating: "9.5", status: "Published", addedDate: "2024-01-15" },
-    { id: 3, title: "Inception", type: "Movie", genre: "Sci-Fi", rating: "8.8", status: "Draft", addedDate: "2024-02-01" },
   ]
 
   const supportRequests = [
@@ -178,25 +197,25 @@ export default function AdminDashboard() {
                   </TableHeader>
                   <TableBody>
                     {users.map((u) => (
-                      <TableRow key={u.id} className="border-gray-800 hover:bg-white/5">
+                      <TableRow key={u.user_id} className="border-gray-800 hover:bg-white/5">
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
                               <AvatarFallback className="bg-gray-700 text-white text-xs">
-                                {u.name.split(" ").map((n) => n[0]).join("")}
+                                {u.fname?.[0]}{u.lname?.[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-white font-medium">{u.name}</p>
+                              <p className="text-white font-medium">{u.fname} {u.lname}</p>
                               <p className="text-gray-400 text-sm">{u.email}</p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="border-amber-500/30 text-amber-400">{u.subscription}</Badge>
+                          <Badge variant="outline" className="border-amber-500/30 text-amber-400">Premium</Badge>
                         </TableCell>
-                        <TableCell><Badge variant="outline" className={getStatusColor(u.status)}>{u.status}</Badge></TableCell>
-                        <TableCell className="text-gray-400">{u.joinDate}</TableCell>
+                        <TableCell><Badge variant="outline" className={getStatusColor("Active")}>Active</Badge></TableCell>
+                        <TableCell className="text-gray-400">{u.created_at ? new Date(u.created_at).toLocaleDateString() : "Unknown"}</TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -244,13 +263,15 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {content.map((c) => (
-                      <TableRow key={c.id} className="border-gray-800 hover:bg-white/5">
-                        <TableCell className="text-white font-medium">{c.title}</TableCell>
-                        <TableCell><Badge variant="outline" className="border-blue-500/30 text-blue-400">{c.type}</Badge></TableCell>
-                        <TableCell className="text-gray-400">{c.genre}</TableCell>
-                        <TableCell><span className="text-amber-400">★</span> {c.rating}</TableCell>
-                        <TableCell><Badge variant="outline" className={getStatusColor(c.status)}>{c.status}</Badge></TableCell>
+                    {media.map((m) => (
+                      <TableRow key={m.media_id} className="border-gray-800 hover:bg-white/5">
+                        <TableCell className="text-white font-medium">{m.title}</TableCell>
+                        <TableCell><Badge variant="outline" className="border-blue-500/30 text-blue-400">Media</Badge></TableCell>
+                        <TableCell className="text-gray-400">
+                          {Array.isArray(m.genres) ? m.genres.join(", ") : m.genres || "Unknown"}
+                        </TableCell>
+                        <TableCell><span className="text-amber-400">★</span> {m.rating?.toFixed(1) || "N/A"}</TableCell>
+                        <TableCell><Badge variant="outline" className={getStatusColor("Published")}>Published</Badge></TableCell>
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

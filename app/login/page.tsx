@@ -57,14 +57,38 @@ export default function LoginPage() {
   // };
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  e.preventDefault();
+  if (!validateForm()) return;
 
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
+  setIsLoading(true);
+  try {
+    // Check if user exists
+    const checkRes = await fetch("/api/user/check-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: formData.email }),
+    });
+
+    const checkData = await checkRes.json();
+
+    if (!checkRes.ok || !checkData.exists) {
+      alert("Email not found. Please sign up first.");
+      return;
+    }
+
+    localStorage.setItem("userId", checkData.userId);
+    localStorage.setItem("isLoggedIn", "true");
+
+    // Redirect to home or profile
     window.location.href = "/home";
-  };
+  } catch (err) {
+    console.error(err);
+    alert(err instanceof Error ? err.message : String(err));
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <div className="relative min-h-screen flex justify-center">

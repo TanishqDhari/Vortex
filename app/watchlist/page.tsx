@@ -39,11 +39,26 @@ export default function WatchlistPage() {
   useEffect(() => {
     async function fetchWatchlist() {
       try {
-        const res = await fetch("/api/watchlist"); // Your API endpoint
+        // For now, using user_id = 1, in a real app this would come from authentication
+        const userId = 1;
+        const res = await fetch(`/api/user/${userId}/watchlist`);
         if (!res.ok) throw new Error("Failed to load watchlist");
         const data = await res.json();
-        setWatchlistItems(data.items);
-        setCustomLists(data.lists);
+        
+        // Transform the data to match our component's expected format
+        const transformedItems = data.map((item: any) => ({
+          id: item.media_id,
+          title: item.title,
+          year: item.release_year,
+          rating: item.rating || 0,
+          image: item.image || "/placeholder.svg",
+          genre: Array.isArray(item.genres) ? item.genres : [],
+          type: "movie" as const, // You might want to add a type field to distinguish
+          addedAt: new Date().toLocaleDateString()
+        }));
+        
+        setWatchlistItems(transformedItems);
+        setCustomLists([]); // Mock custom lists for now
       } catch (err) {
         console.error(err);
         setWatchlistItems([]);

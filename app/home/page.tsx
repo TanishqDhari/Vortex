@@ -44,19 +44,34 @@ function minutesToDuration(minutes?: number | null): string {
 // }
 
 function mapRowToCard(row: MediaRow): CardItem {
+  // Parse genres from the API response
+  let genresArray: string[] = [];
+  if (row.genres) {
+    if (Array.isArray(row.genres)) {
+      genresArray = row.genres;
+    } else if (typeof row.genres === "string") {
+      try {
+        const parsed = JSON.parse(row.genres);
+        genresArray = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        genresArray = row.genres.split(",").map((g: string) => g.trim());
+      }
+    }
+  }
+
   return {
     id: Number(row.media_id ?? row.id ?? 0),
     title: String(row.title ?? row.name ?? "Untitled"),
-    year: Number(row.release_date.slice(0, 4) ?? 0),
+    year: Number(row.release_year ?? 0),
     rating: Number(row.rating ?? row.score ?? 0) || 0,
-    image: String(row.poster_url ?? row.image ?? "/placeholder.svg"),
-    genre: row.genre ?? row.genres ?? [],
+    image: String(row.image ?? "/placeholder.svg"),
+    genre: genresArray,
   };
 }
 
 function mapRowToHero(row: MediaRow): HeroItem {
   const card = mapRowToCard(row);
-  const durationMinutes = Number(row.duration_minutes ?? row.duration ?? 0) || undefined;
+  const durationMinutes = Number(row.duration ?? 0) || undefined;
   return {
     id: card.id,
     title: card.title,
@@ -65,7 +80,7 @@ function mapRowToHero(row: MediaRow): HeroItem {
     duration: minutesToDuration(durationMinutes),
     synopsis: String(row.synopsis ?? ""),
     image: card.image,
-    genre: Array.isArray(card.genre) ? card.genre : card.genre ? [card.genre] : [],
+    genre: card.genre,
   };
 }
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,27 +12,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MediaCard } from "@/components/media-card"
 import { Edit, Camera, Calendar, Mail, User, Crown, CreditCard, History, Bookmark } from "lucide-react"
 
-// Mock user data
-const userData = {
-  firstName: "John",
-  lastName: "Doe",
-  email: "john.doe@example.com",
-  dateOfBirth: "1990-05-15",
-  joinDate: "2023-01-15",
-  avatar: "/diverse-user-avatars.png",
-  subscription: {
-    plan: "Premium",
-    status: "Active",
-    nextBilling: "2024-12-15",
-    price: "$14.99/month",
-  },
-  preferences: ["Action", "Sci-Fi", "Thriller", "Drama"],
-  stats: {
-    moviesWatched: 127,
-    tvShowsWatched: 34,
-    hoursWatched: 245,
-    favoriteGenre: "Action",
-  },
+type UserData = {
+  user_id: number;
+  fname: string;
+  lname: string;
+  email: string;
+  dob: string;
+  login_type: string;
+  created_at?: string;
+}
+
+type MediaItem = {
+  media_id: number;
+  title: string;
+  release_year: number;
+  rating: number;
+  image: string;
+  genres: string[];
+  synopsis?: string;
+  duration?: number;
 }
 
 const watchHistory = Array.from({ length: 12 }, (_, i) => ({
@@ -65,20 +63,136 @@ const paymentHistory = [
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
+  const [userData, setUserData] = useState<UserData | null>(null)
+  const [watchHistory, setWatchHistory] = useState<MediaItem[]>([])
+  const [watchlist, setWatchlist] = useState<MediaItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
-    firstName: userData.firstName,
-    lastName: userData.lastName,
-    email: userData.email,
-    dateOfBirth: userData.dateOfBirth,
+    firstName: "",
+    lastName: "",
+    email: "",
+    dateOfBirth: "",
   })
 
-  const handleSave = () => {
-    // Save profile changes
-    setIsEditing(false)
+  // Fetch user data and related information
+  useEffect(() => {
+    async function fetchUserData() {
+      const storedUserId = localStorage.getItem("userId");
+
+    if (!storedUserId) {
+      console.log("No userId found in localStorage. Redirecting to login.");
+      window.location.href = "/login";
+      return;
+    }
+
+    const userId = parseInt(storedUserId, 10);
+    if (isNaN(userId) || userId <= 0) {
+      console.log("Invalid userId in localStorage. Redirecting to login.");
+      window.location.href = "/login";
+      return;
+    }
+    console.log(storedUserId);
+    
+      try {
+        // Example after login
+        
+        const [userRes, historyRes, watchlistRes] = await Promise.all([
+          fetch(`/api/user/${userId}`),
+          fetch(`/api/user/${userId}/watch-history`),
+          fetch(`/api/user/${userId}/watchlist`)
+        ]);
+        
+        if (userRes.ok) {
+          const userDataArray = await userRes.json();
+          if (userDataArray.length > 0) {
+            const user = userDataArray[0];
+            setUserData(user);
+            setFormData({
+              firstName: user.fname,
+              lastName: user.lname,
+              email: user.email,
+              dateOfBirth: user.dob,
+            });
+          }
+        }
+
+        if (historyRes.ok) {
+          const history = await historyRes.json();
+          setWatchHistory(history);
+        }
+
+        if (watchlistRes.ok) {
+          const watchlistData = await watchlistRes.json();
+          setWatchlist(watchlistData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUserData();
+  }, []);
+
+  const handleSave = async () => {
+    if (!userData) return;
+    
+    try {
+      const response = await fetch(`/api/user/${userData.user_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userData.user_id,
+          fname: formData.firstName,
+          lname: formData.lastName,
+          email: formData.email,
+          dob: formData.dateOfBirth,
+          login_type: userData.login_type,
+          user_password: userData.user_password || ""
+        })
+      });
+
+      if (response.ok) {
+        // Update local state
+        setUserData(prev => prev ? {
+          ...prev,
+          fname: formData.firstName,
+          lname: formData.lastName,
+          email: formData.email,
+          dob: formData.dateOfBirth
+        } : null);
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error("Failed to update user data:", error);
+    }
   }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex">
+        <Sidebar />
+        <div className="flex-1 ml-16 flex items-center justify-center">
+          <div className="text-muted-foreground">Loading profile...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <div className="min-h-screen bg-background flex">
+        <Sidebar />
+        <div className="flex-1 ml-16 flex items-center justify-center">
+          <div className="text-muted-foreground">User not found</div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -111,10 +225,10 @@ export default function ProfilePage() {
                   <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
                     <div className="relative">
                       <Avatar className="w-24 h-24">
-                        <AvatarImage src={userData.avatar || "/placeholder.svg"} alt="Profile" />
+                        <AvatarImage src="/placeholder.svg" alt="Profile" />
                         <AvatarFallback className="text-2xl">
-                          {userData.firstName[0]}
-                          {userData.lastName[0]}
+                          {userData.fname?.[0] || "U"}
+                          {userData.lname?.[0] || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <Button
@@ -128,16 +242,16 @@ export default function ProfilePage() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         <h2 className="text-2xl font-bold text-foreground">
-                          {userData.firstName} {userData.lastName}
+                          {userData.fname} {userData.lname}
                         </h2>
                         <Badge className="bg-primary/20 text-primary border-primary/30">
                           <Crown className="w-3 h-3 mr-1" />
-                          {userData.subscription.plan}
+                          Premium
                         </Badge>
                       </div>
                       <p className="text-muted-foreground mb-2">{userData.email}</p>
                       <p className="text-sm text-muted-foreground">
-                        Member since {new Date(userData.joinDate).toLocaleDateString()}
+                        Member since {userData.created_at ? new Date(userData.created_at).toLocaleDateString() : "Unknown"}
                       </p>
                     </div>
                     <Button variant="outline" onClick={() => setIsEditing(true)}>
@@ -152,26 +266,30 @@ export default function ProfilePage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-primary">{userData.stats.moviesWatched}</div>
-                    <p className="text-sm text-muted-foreground">Movies Watched</p>
+                    <div className="text-2xl font-bold text-primary">{watchHistory.length}</div>
+                    <p className="text-sm text-muted-foreground">Items Watched</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-primary">{userData.stats.tvShowsWatched}</div>
-                    <p className="text-sm text-muted-foreground">TV Shows</p>
+                    <div className="text-2xl font-bold text-primary">{watchlist.length}</div>
+                    <p className="text-sm text-muted-foreground">Watchlist Items</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-primary">{userData.stats.hoursWatched}</div>
-                    <p className="text-sm text-muted-foreground">Hours Watched</p>
+                    <div className="text-2xl font-bold text-primary">
+                      {watchHistory.reduce((total, item) => total + (item.duration || 0), 0)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Minutes Watched</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-primary">{userData.stats.favoriteGenre}</div>
-                    <p className="text-sm text-muted-foreground">Favorite Genre</p>
+                    <div className="text-2xl font-bold text-primary">
+                      {watchHistory.length > 0 ? Math.round(watchHistory.reduce((sum, item) => sum + (item.rating || 0), 0) / watchHistory.length * 10) / 10 : 0}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Avg Rating</p>
                   </CardContent>
                 </Card>
               </div>
@@ -183,11 +301,16 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {userData.preferences.map((pref) => (
-                      <Badge key={pref} variant="secondary">
-                        {pref}
-                      </Badge>
-                    ))}
+                    {watchHistory.length > 0 ? (
+                      // Extract unique genres from watch history as preferences
+                      Array.from(new Set(watchHistory.flatMap(item => item.genres || []))).slice(0, 5).map((pref) => (
+                        <Badge key={pref} variant="secondary">
+                          {pref}
+                        </Badge>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground">No preferences available yet. Start watching to build your preferences!</p>
+                    )}
                   </div>
                   <Button variant="outline" className="mt-4 bg-transparent">
                     Update Preferences
@@ -203,7 +326,16 @@ export default function ProfilePage() {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     {watchHistory.slice(0, 6).map((item) => (
-                      <MediaCard key={item.id} {...item} showProgress />
+                      <MediaCard 
+                        key={item.media_id} 
+                        id={item.media_id}
+                        title={item.title || "Untitled"}
+                        year={item.release_year || 0}
+                        rating={item.rating || 0}
+                        image={item.image || "/placeholder.svg"}
+                        genre={item.genres || []}
+                        showProgress 
+                      />
                     ))}
                   </div>
                 </CardContent>
@@ -221,9 +353,15 @@ export default function ProfilePage() {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     {watchlist.map((item) => (
-                      <div key={item.id} className="space-y-2">
-                        <MediaCard {...item} />
-                        <p className="text-xs text-muted-foreground">Added {item.addedAt}</p>
+                      <div key={item.media_id} className="space-y-2">
+                        <MediaCard 
+                          id={item.media_id}
+                          title={item.title || "Untitled"}
+                          year={item.release_year || 0}
+                          rating={item.rating || 0}
+                          image={item.image || "/placeholder.svg"}
+                          genre={item.genres || []}
+                        />
                       </div>
                     ))}
                   </div>
@@ -243,7 +381,7 @@ export default function ProfilePage() {
                   <div className="space-y-4">
                     {watchHistory.map((item) => (
                       <div
-                        key={item.id}
+                        key={item.media_id}
                         className="flex items-center space-x-4 p-4 bg-card/50 rounded-lg hover:bg-card/80 transition-colors"
                       >
                         <img
@@ -253,24 +391,15 @@ export default function ProfilePage() {
                         />
                         <div className="flex-1">
                           <h3 className="font-semibold text-foreground">{item.title}</h3>
-                          <p className="text-sm text-muted-foreground">Watched on {item.watchedAt}</p>
+                          <p className="text-sm text-muted-foreground">Year: {item.release_year}</p>
                           <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="outline">{item.genre[0]}</Badge>
-                            <span className="text-sm text-muted-foreground">⭐ {item.rating.toFixed(1)}</span>
+                            {item.genres && item.genres.length > 0 && (
+                              <Badge variant="outline">{item.genres[0]}</Badge>
+                            )}
+                            <span className="text-sm text-muted-foreground">⭐ {(item.rating || 0).toFixed(1)}</span>
                           </div>
-                          {item.progress < 100 && (
-                            <div className="mt-2">
-                              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                                <span>Progress</span>
-                                <span>{item.progress}%</span>
-                              </div>
-                              <div className="w-full bg-secondary rounded-full h-1">
-                                <div className="bg-primary h-1 rounded-full" style={{ width: `${item.progress}%` }} />
-                              </div>
-                            </div>
-                          )}
                         </div>
-                        <Button variant="outline">Continue</Button>
+                        <Button variant="outline">Watch Again</Button>
                       </div>
                     ))}
                   </div>
@@ -290,15 +419,15 @@ export default function ProfilePage() {
                 <CardContent>
                   <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border border-primary/20">
                     <div>
-                      <h3 className="text-xl font-semibold text-foreground">{userData.subscription.plan} Plan</h3>
-                      <p className="text-muted-foreground">{userData.subscription.price}</p>
+                      <h3 className="text-xl font-semibold text-foreground">Premium Plan</h3>
+                      <p className="text-muted-foreground">$14.99/month</p>
                       <p className="text-sm text-muted-foreground">
-                        Next billing: {new Date(userData.subscription.nextBilling).toLocaleDateString()}
+                        Next billing: {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
                       </p>
                     </div>
                     <div className="text-right">
                       <Badge className="bg-green-500/20 text-green-400 border-green-500/30 mb-2">
-                        {userData.subscription.status}
+                        Active
                       </Badge>
                       <div className="space-x-2">
                         <Button variant="outline">Change Plan</Button>
@@ -319,7 +448,11 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {paymentHistory.map((payment) => (
+                    {[
+                      { id: 1, date: "2024-11-15", amount: "$14.99", plan: "Premium", status: "Paid", method: "Credit Card" },
+                      { id: 2, date: "2024-10-15", amount: "$14.99", plan: "Premium", status: "Paid", method: "Credit Card" },
+                      { id: 3, date: "2024-09-15", amount: "$14.99", plan: "Premium", status: "Paid", method: "Credit Card" },
+                    ].map((payment) => (
                       <div key={payment.id} className="flex items-center justify-between p-4 bg-card/50 rounded-lg">
                         <div>
                           <p className="font-medium text-foreground">{payment.amount}</p>

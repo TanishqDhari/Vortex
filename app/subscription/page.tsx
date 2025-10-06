@@ -24,20 +24,32 @@ export default function SubscriptionPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [plansRes, currentRes, paymentsRes, historyRes] = await Promise.all([
-          fetch("/api/subscriptions/plans").then((r) => r.json()),
-          fetch("/api/subscriptions/current").then((r) => r.json()),
-          fetch("/api/subscriptions/payments").then((r) => r.json()),
-          fetch("/api/subscriptions/history").then((r) => r.json()),
+        const [plansRes] = await Promise.all([
+          fetch("/api/subscription-plan").then((r) => r.json()),
         ]);
 
         setSubscriptionPlans(plansRes);
-        setCurrentSubscription(currentRes);
-        setPaymentMethods(paymentsRes);
-        setBillingHistory(historyRes);
+        
+        // Mock current subscription for now
+        setCurrentSubscription({
+          plan: "Premium",
+          price: "$14.99/month",
+          status: "Active",
+          nextBilling: "2024-12-15"
+        });
+
+        // Mock payment methods and billing history
+        setPaymentMethods([
+          { id: 1, brand: "Visa", last4: "4242", type: "Credit Card", isDefault: true }
+        ]);
+        
+        setBillingHistory([
+          { id: 1, date: "2024-11-15", amount: "$14.99", plan: "Premium", status: "Paid", method: "Credit Card" },
+          { id: 2, date: "2024-10-15", amount: "$14.99", plan: "Premium", status: "Paid", method: "Credit Card" },
+        ]);
 
         // Set default selected plan
-        setSelectedPlan(currentRes.plan.toLowerCase());
+        setSelectedPlan("premium");
       } catch (error) {
         console.error("Failed to fetch subscription data:", error);
       }
@@ -97,12 +109,12 @@ export default function SubscriptionPage() {
             <div className="grid md:grid-cols-3 gap-6">
               {subscriptionPlans.map((plan) => (
                 <Card
-                  key={plan.id}
-                  className={`relative border ${plan.popular ? "ring-2 ring-primary" : ""} ${
-                    selectedPlan === plan.id ? "ring-2 ring-primary" : ""
+                  key={plan.plan_id}
+                  className={`relative border ${plan.plan_name === "Premium" ? "ring-2 ring-primary" : ""} ${
+                    selectedPlan === plan.plan_id ? "ring-2 ring-primary" : ""
                   } transition-all hover:shadow-lg cursor-pointer`}
-                  onClick={() => handlePlanChange(plan.id)}>
-                  {plan.popular && (
+                  onClick={() => handlePlanChange(plan.plan_id)}>
+                  {plan.plan_name === "Premium" && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                       <Badge className="bg-primary text-primary-foreground">
                         <Star className="w-3 h-3 mr-1" />
@@ -111,27 +123,33 @@ export default function SubscriptionPage() {
                     </div>
                   )}
                   <CardHeader className="text-center pb-4">
-                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                    <CardTitle className="text-2xl">{plan.plan_name}</CardTitle>
                     <div className="space-y-2">
-                      <div className="text-4xl font-bold text-primary">${plan.price[billingCycle].toFixed(2)}</div>
-                      <p className="text-muted-foreground">per {billingCycle}</p>
+                      <div className="text-4xl font-bold text-primary">${plan.price}</div>
+                      <p className="text-muted-foreground">per {plan.billing_cycle}</p>
                     </div>
-                    <p className="text-muted-foreground">{plan.description}</p>
+                    <p className="text-muted-foreground">{plan.plan_name} subscription plan</p>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-3">
-                      {plan.features.map((feature: string, idx: number) => (
-                        <div key={idx} className="flex items-center space-x-3">
-                          <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                          <span className="text-sm">{feature}</span>
-                        </div>
-                      ))}
+                      <div className="flex items-center space-x-3">
+                        <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <span className="text-sm">Up to {plan.device_limit} devices</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <span className="text-sm">{plan.video_quality} video quality</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        <span className="text-sm">Unlimited streaming</span>
+                      </div>
                     </div>
                     <Button
                       className="w-full"
-                      variant={selectedPlan === plan.id ? "default" : "outline"}
-                      onClick={() => handlePlanChange(plan.id)}>
-                      {currentSubscription.plan.toLowerCase() === plan.id ? "Current Plan" : "Choose Plan"}
+                      variant={selectedPlan === plan.plan_id ? "default" : "outline"}
+                      onClick={() => handlePlanChange(plan.plan_id)}>
+                      {currentSubscription?.plan === plan.plan_name ? "Current Plan" : "Choose Plan"}
                     </Button>
                   </CardContent>
                 </Card>

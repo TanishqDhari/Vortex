@@ -27,18 +27,27 @@ const ratings = ["All", "9+", "8+", "7+", "6+"];
 const sortOptions = ["popularity", "rating", "year", "title"];
 
 function mapRowToSeries(row: SeriesRow): SeriesItem {
+  // Parse genres from the API response
   let genresArray: string[] = [];
-  if (row.genre) {
-    if (Array.isArray(row.genre)) genresArray = row.genre;
-    else if (typeof row.genre === "string") genresArray = row.genre.split(",").map((g) => g.trim());
+  if (row.genres) {
+    if (Array.isArray(row.genres)) {
+      genresArray = row.genres;
+    } else if (typeof row.genres === "string") {
+      try {
+        const parsed = JSON.parse(row.genres);
+        genresArray = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        genresArray = row.genres.split(",").map((g: string) => g.trim());
+      }
+    }
   }
 
   return {
-    id: Number(row.tv_id ?? row.id ?? 0),
+    id: Number(row.media_id ?? row.id ?? 0),
     title: String(row.title ?? "Untitled"),
-    year: Number(row.release_date.slice(0, 4) ?? row.year ?? 0),
+    year: Number(row.release_year ?? 0),
     rating: Number(row.rating ?? 0),
-    image: String(row.image ?? row.poster_url ?? "/placeholder.svg"),
+    image: String(row.image ?? "/placeholder.svg"),
     genre: genresArray,
     seasons: Number(row.seasons ?? 1),
     episodes: Number(row.episodes ?? 1),
@@ -60,10 +69,11 @@ export default function SeriessPage() {
     let active = true;
     async function load() {
       try {
-        const res = await fetch("/api/series", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to fetch series");
+        const res = await fetch("/api/media", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to fetch media");
         const rows: SeriesRow[] = await res.json();
         if (!active) return;
+        // Filter for series (you might need to add a type field to distinguish)
         setSeriess(rows.map(mapRowToSeries).filter((s) => s.id));
       } catch (err) {
         if (active) setSeriess([]);

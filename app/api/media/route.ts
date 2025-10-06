@@ -11,7 +11,7 @@ export async function GET() {
       SELECT JSON_ARRAYAGG(g.title)
       FROM media_genre mg
       JOIN genre g ON g.genre_id = mg.genre_id
-      WHERE mg.media_id = m.media_id
+      WHERE mg.media_id = m.media_id  
     ) AS genres,
     (
       SELECT JSON_ARRAYAGG(

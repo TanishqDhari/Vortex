@@ -42,7 +42,20 @@ export default function CategoriesPage() {
         const mediaData = await mediaRes.json();
 
         setCategories(genresData);
-        setFeaturedContent(mediaData);
+        
+        // Transform media data to match expected format
+        const transformedMedia = mediaData.map((item: any) => ({
+          id: item.media_id,
+          title: item.title,
+          year: item.release_year,
+          rating: item.rating || 0,
+          duration: item.duration ? `${Math.floor(item.duration / 60)}h ${item.duration % 60}m` : "",
+          synopsis: item.synopsis || "",
+          image: item.image || "/placeholder.svg",
+          genre: Array.isArray(item.genres) ? item.genres : [],
+        }));
+        
+        setFeaturedContent(transformedMedia);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {

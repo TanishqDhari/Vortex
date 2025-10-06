@@ -25,7 +25,8 @@ export default function SignupPage() {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const handleChange = (field: string, value: string | boolean) => setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (field: string, value: string | boolean) =>
+    setFormData((prev) => ({ ...prev, [field]: value }));
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -35,7 +36,8 @@ export default function SignupPage() {
     if (!formData.dateOfBirth) newErrors.dateOfBirth = "Date of Birth is required";
     if (!formData.password) newErrors.password = "Password is required";
     if (!formData.confirmPassword) newErrors.confirmPassword = "Please confirm password";
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    if (formData.password !== formData.confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match";
     if (!formData.agreeToTerms) newErrors.agreeToTerms = "You must agree to terms";
 
     setErrors(newErrors);
@@ -44,7 +46,7 @@ export default function SignupPage() {
 
   const handleSignup = async () => {
     if (!validateForm()) return;
-
+    const dobString = new Date(formData.dateOfBirth).toISOString().split("T")[0];
     setIsLoading(true);
     try {
       const res = await fetch("/api/user", {
@@ -52,18 +54,23 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
+          fname: formData.firstName,
+          lname: formData.lastName,
           login_type: "password",
-          dob: formData.dateOfBirth,
-          password: formData.password,
+          user_password: formData.password,
+          dob: dobString,
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to create user");
+      const data = await res.json();
 
-      // Redirect after signup
-      window.location.href = "/home";
+      if (!res.ok) {
+        alert(data?.error || "Failed to create user");
+        return;
+      }
+
+      alert("Account created successfully!");
+      window.location.href = "/login";
     } catch (err) {
       console.error(err);
       alert("Failed to create user");
@@ -74,10 +81,15 @@ export default function SignupPage() {
 
   return (
     <div className="relative min-h-screen flex justify-center">
-      <div className="fixed inset-0 bg-cover bg-center z-0" style={{ backgroundImage: "url('/bg.jpg')" }}>
+      {/* Background */}
+      <div
+        className="fixed inset-0 bg-cover bg-center z-0"
+        style={{ backgroundImage: "url('/bg.jpg')" }}
+      >
         <div className="absolute inset-0 bg-black/75"></div>
       </div>
 
+      {/* Content */}
       <div className="relative z-10 w-full max-w-md px-4 py-8">
         <div className="flex items-center justify-center mb-6">
           <img src="/vortex_logo_purple.svg" alt="Vortex Logo" width={250} height={180} />
@@ -85,7 +97,9 @@ export default function SignupPage() {
 
         <div className="shadow-input mx-auto w-full rounded-none p-6 md:rounded-2xl md:p-8 bg-black/90">
           <h2 className="text-xl font-bold text-neutral-200 mb-1 text-center">Create Account</h2>
-          <p className="text-sm text-neutral-300 mb-6 text-center">Join Vortex and start your cinematic journey</p>
+          <p className="text-sm text-neutral-300 mb-6 text-center">
+            Join Vortex and start your cinematic journey
+          </p>
 
           <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
             {/* Name Fields */}
@@ -152,7 +166,8 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 hover:text-neutral-100">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 hover:text-neutral-100"
+                >
                   {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
                 </button>
               </div>
@@ -173,11 +188,14 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirm((s) => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 hover:text-neutral-100">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-300 hover:text-neutral-100"
+                >
                   {showConfirm ? <IconEyeOff size={18} /> : <IconEye size={18} />}
                 </button>
               </div>
-              {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && (
+                <p className="text-xs text-red-500">{errors.confirmPassword}</p>
+              )}
             </LabelInputContainer>
 
             {/* Terms */}
@@ -202,7 +220,11 @@ export default function SignupPage() {
             {errors.agreeToTerms && <p className="text-xs text-red-500">{errors.agreeToTerms}</p>}
 
             {/* Signup Button */}
-            <Button onClick={handleSignup} disabled={isLoading} className="w-full bg-primary text-white">
+            <Button
+              onClick={handleSignup}
+              disabled={isLoading}
+              className="w-full bg-primary text-white"
+            >
               {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
@@ -219,6 +241,10 @@ export default function SignupPage() {
   );
 }
 
-const LabelInputContainer = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <div className={`flex w-full flex-col space-y-2 ${className || ""}`}>{children}</div>
-);
+const LabelInputContainer = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => <div className={`flex w-full flex-col space-y-2 ${className || ""}`}>{children}</div>;

@@ -19,7 +19,7 @@ const navigation = [
   { name: "Home", href: "/home", icon: Home },
   { name: "Search", href: "/search", icon: Search },
   { name: "Movies", href: "/movies", icon: Film },
-  { name: "TV Shows", href: "/tv-shows", icon: Tv },
+  { name: "TV Shows", href: "/series", icon: Tv },
   { name: "Watchlist", href: "/watchlist", icon: Bookmark },
   { name: "Categories", href: "/categories", icon: Grid3X3 },
 ];

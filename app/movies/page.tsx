@@ -29,13 +29,28 @@ function minutesToDuration(minutes?: number | null): string | undefined {
 }
 
 function mapRowToMovie(row: MediaRow): MovieItem {
+  // Parse genres from the API response
+  let genresArray: string[] = [];
+  if (row.genres) {
+    if (Array.isArray(row.genres)) {
+      genresArray = row.genres;
+    } else if (typeof row.genres === "string") {
+      try {
+        const parsed = JSON.parse(row.genres);
+        genresArray = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        genresArray = row.genres.split(",").map((g: string) => g.trim());
+      }
+    }
+  }
+
   return {
     id: Number(row.media_id ?? row.id ?? 0),
     title: String(row.title ?? "Untitled"),
-    year: Number(row.release_date.slice(0, 4) ?? 0),
+    year: Number(row.release_year ?? 0),
     rating: Number(row.rating ?? 0) || 0,
-    image: String(row.image ?? row.poster_url ?? "/placeholder.svg"),
-    genre: genres,
+    image: String(row.image ?? "/placeholder.svg"),
+    genre: genresArray,
     duration: typeof row.duration === "number" ? minutesToDuration(row.duration) : String(row.duration ?? ""),
     director: String(row.director ?? ""),
   };

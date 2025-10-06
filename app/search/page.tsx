@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { MediaCard } from "@/components/media-card"
 import { Button } from "@/components/ui/button"
@@ -8,6 +8,17 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, TrendingUp } from "lucide-react"
+
+type MediaItem = {
+  media_id: number;
+  title: string;
+  release_year: number;
+  rating: number;
+  image: string;
+  genres: string[];
+  synopsis?: string;
+  duration?: number;
+}
 
 // Mock data
 const trendingSearches = [
@@ -21,44 +32,53 @@ const trendingSearches = [
   "Sci-Fi Movies",
 ]
 
-const searchResults = {
-  movies: Array.from({ length: 12 }, (_, i) => ({
-    id: i + 1,
-    title: `Movie Result ${i + 1}`,
-    year: 2020 + Math.floor(Math.random() * 5),
-    rating: 7.0 + Math.random() * 2,
-    image: `/placeholder.svg?height=400&width=300&query=movie search result ${i + 1}`,
-    genre: ["Action", "Drama"],
-  })),
-  tvShows: Array.from({ length: 8 }, (_, i) => ({
-    id: i + 1,
-    title: `TV Show Result ${i + 1}`,
-    year: 2020 + Math.floor(Math.random() * 5),
-    rating: 7.0 + Math.random() * 2,
-    image: `/placeholder.svg?height=400&width=300&query=tv show search result ${i + 1}`,
-    genre: ["Drama", "Thriller"],
-  })),
-  actors: Array.from({ length: 6 }, (_, i) => ({
-    id: i + 1,
-    name: `Actor ${i + 1}`,
-    image: `/placeholder.svg?height=400&width=300&query=actor portrait ${i + 1}`,
-    knownFor: ["Movie A", "Movie B", "TV Show C"],
-  })),
-  directors: Array.from({ length: 4 }, (_, i) => ({
-    id: i + 1,
-    name: `Director ${i + 1}`,
-    image: `/placeholder.svg?height=400&width=300&query=director portrait ${i + 1}`,
-    knownFor: ["Film A", "Film B", "Film C"],
-  })),
-}
-
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [hasSearched, setHasSearched] = useState(false)
+  const [searchResults, setSearchResults] = useState<{
+    movies: MediaItem[];
+    tvShows: MediaItem[];
+    actors: any[];
+    directors: any[];
+  }>({
+    movies: [],
+    tvShows: [],
+    actors: [],
+    directors: []
+  })
+  const [loading, setLoading] = useState(false)
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query)
     setHasSearched(true)
+    setLoading(true)
+    
+    try {
+      const res = await fetch("/api/media");
+      if (res.ok) {
+        const allMedia: MediaItem[] = await res.json();
+        
+        // Filter results based on search query
+        const filtered = allMedia.filter(item => 
+          item.title.toLowerCase().includes(query.toLowerCase()) ||
+          (item.genres && item.genres.some(genre => 
+            genre.toLowerCase().includes(query.toLowerCase())
+          ))
+        );
+        
+        // For now, treat all as movies. In a real app, you'd distinguish by type
+        setSearchResults({
+          movies: filtered,
+          tvShows: [],
+          actors: [],
+          directors: []
+        });
+      }
+    } catch (error) {
+      console.error("Search failed:", error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -144,49 +164,79 @@ export default function SearchPage() {
                 </TabsList>
 
                 <TabsContent value="all" className="space-y-8">
-                  {/* Movies Section */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Movies</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                      {searchResults.movies.slice(0, 6).map((movie) => (
-                        <MediaCard key={`movie-${movie.id}`} {...movie} />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* TV Shows Section */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-4">TV Shows</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                      {searchResults.tvShows.slice(0, 6).map((show) => (
-                        <MediaCard key={`tv-${show.id}`} {...show} />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* People Section */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-4">People</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                      {[...searchResults.actors.slice(0, 3), ...searchResults.directors.slice(0, 3)].map((person) => (
-                        <div key={person.id} className="text-center">
-                          <img
-                            src={person.image || "/placeholder.svg"}
-                            alt={person.name}
-                            className="w-full aspect-[2/3] object-cover rounded-lg mb-2"
-                          />
-                          <h4 className="font-medium text-foreground text-sm">{person.name}</h4>
-                          <p className="text-xs text-muted-foreground">Known for: {person.knownFor[0]}</p>
+                  {loading ? (
+                    <div className="text-center text-muted-foreground">Searching...</div>
+                  ) : (
+                    <>
+                      {/* Movies Section */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Movies</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                          {searchResults.movies.slice(0, 6).map((movie) => (
+                            <MediaCard 
+                              key={`movie-${movie.media_id}`} 
+                              id={movie.media_id}
+                              title={movie.title}
+                              year={movie.release_year}
+                              rating={movie.rating}
+                              image={movie.image}
+                              genre={movie.genres || []}
+                            />
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      </div>
+
+                      {/* TV Shows Section */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">TV Shows</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                          {searchResults.tvShows.slice(0, 6).map((show) => (
+                            <MediaCard 
+                              key={`tv-${show.media_id}`} 
+                              id={show.media_id}
+                              title={show.title}
+                              year={show.release_year}
+                              rating={show.rating}
+                              image={show.image}
+                              genre={show.genres || []}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* People Section */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">People</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                          {[...searchResults.actors.slice(0, 3), ...searchResults.directors.slice(0, 3)].map((person) => (
+                            <div key={person.id} className="text-center">
+                              <img
+                                src={person.image || "/placeholder.svg"}
+                                alt={person.name}
+                                className="w-full aspect-[2/3] object-cover rounded-lg mb-2"
+                              />
+                              <h4 className="font-medium text-foreground text-sm">{person.name}</h4>
+                              <p className="text-xs text-muted-foreground">Known for: {person.knownFor[0]}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="movies">
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     {searchResults.movies.map((movie) => (
-                      <MediaCard key={movie.id} {...movie} />
+                      <MediaCard 
+                        key={movie.media_id} 
+                        id={movie.media_id}
+                        title={movie.title}
+                        year={movie.release_year}
+                        rating={movie.rating}
+                        image={movie.image}
+                        genre={movie.genres || []}
+                      />
                     ))}
                   </div>
                 </TabsContent>
@@ -194,7 +244,15 @@ export default function SearchPage() {
                 <TabsContent value="tv">
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     {searchResults.tvShows.map((show) => (
-                      <MediaCard key={show.id} {...show} />
+                      <MediaCard 
+                        key={show.media_id} 
+                        id={show.media_id}
+                        title={show.title}
+                        year={show.release_year}
+                        rating={show.rating}
+                        image={show.image}
+                        genre={show.genres || []}
+                      />
                     ))}
                   </div>
                 </TabsContent>
