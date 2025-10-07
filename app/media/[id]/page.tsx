@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Sidebar } from "@/components/sidebar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from "react";
+import { Sidebar } from "@/components/sidebar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Play,
   Plus,
@@ -19,59 +19,59 @@ import {
   Download,
   Share2,
   Heart,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type MediaData = {
-  id: number
-  title: string
-  year: number
-  rating: number
-  userRating: number
-  duration: string
-  genre: string[]
-  ageRating: string
-  synopsis: string
-  director: string
-  studio: string
-  cast: { name: string; role: string; image: string }[]
-  poster: string
-  backdrop: string
-  trailers: { title: string; url: string; thumbnail: string }[]
-  viewCount: string
-  releaseDate: string
-  awards: string[]
-  isLiked: boolean
-  isInWatchlist: boolean
-  progress: number
-}
+  id: number;
+  title: string;
+  year: number;
+  rating: number;
+  userRating: number;
+  duration: string;
+  genre: string[];
+  ageRating: string;
+  synopsis: string;
+  director: string;
+  studio: string;
+  cast: { name: string; role: string; image: string }[];
+  poster: string;
+  backdrop: string;
+  trailers: { title: string; url: string; thumbnail: string }[];
+  viewCount: string;
+  releaseDate: string;
+  awards: string[];
+  isLiked: boolean;
+  isInWatchlist: boolean;
+  progress: number;
+};
 
 export default function MediaPage({ params }: { params: { id: string } }) {
-  const mediaId = Number.parseInt(params.id)
-  const [media, setMedia] = useState<MediaData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
-  const [userRating, setUserRating] = useState(0)
-  const [isLiked, setIsLiked] = useState(false)
-  const [isInWatchlist, setIsInWatchlist] = useState(false)
+  const mediaId = Number.parseInt(params.id);
+  const [media, setMedia] = useState<MediaData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [userRating, setUserRating] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
 
   useEffect(() => {
     async function fetchMediaData() {
       try {
-        setLoading(true)
-        const res = await fetch(`/api/media/${mediaId}`)
-        if (!res.ok) throw new Error("Media not found")
-        const data = await res.json()
-        
-        if (!data || data.length === 0) throw new Error("Media not found")
-        
-        const m = data[0]
-        
+        setLoading(true);
+        const res = await fetch(`/api/media/${mediaId}`);
+        if (!res.ok) throw new Error("Media not found");
+        const data = await res.json();
+
+        if (!data || data.length === 0) throw new Error("Media not found");
+
+        const m = data[0];
+
         // Transform API data to match the expected format
         const transformedMedia: MediaData = {
           id: m.media_id,
           title: m.title || "Untitled",
-          year: m.release_year || 0,
+          year: m.release_date.slice(0, 4) || 0,
           rating: m.rating || 0,
           userRating: 0,
           duration: m.duration ? `${Math.floor(m.duration / 60)}h ${m.duration % 60}m` : "N/A",
@@ -90,21 +90,21 @@ export default function MediaPage({ params }: { params: { id: string } }) {
           isLiked: false,
           isInWatchlist: false,
           progress: 0,
-        }
-        
-        setMedia(transformedMedia)
-        setUserRating(transformedMedia.userRating)
-        setIsLiked(transformedMedia.isLiked)
-        setIsInWatchlist(transformedMedia.isInWatchlist)
+        };
+
+        setMedia(transformedMedia);
+        setUserRating(transformedMedia.userRating);
+        setIsLiked(transformedMedia.isLiked);
+        setIsInWatchlist(transformedMedia.isInWatchlist);
       } catch (err: any) {
-        setError(err.message || "Something went wrong")
+        setError(err.message || "Something went wrong");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchMediaData()
-  }, [mediaId])
+    fetchMediaData();
+  }, [mediaId]);
 
   if (loading) {
     return (
@@ -117,7 +117,7 @@ export default function MediaPage({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !media) {
@@ -131,12 +131,12 @@ export default function MediaPage({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   const handleRating = (rating: number) => {
-    setUserRating(rating)
-  }
+    setUserRating(rating);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -184,35 +184,34 @@ export default function MediaPage({ params }: { params: { id: string } }) {
 
                   <p className="text-foreground text-lg leading-relaxed max-w-2xl">{media.synopsis}</p>
 
-                <div className="flex items-center space-x-4">
-                  {/* Watch Now with gradient */}
-                  <Button size="lg" variant="gradient" className="px-8">
-                    <Play className="mr-2 h-5 w-5" />
-                    Watch Now
-                  </Button>
+                  <div className="flex items-center space-x-4">
+                    {/* Watch Now with gradient */}
+                    <Button size="lg" variant="gradient" className="px-8">
+                      <Play className="mr-2 h-5 w-5" />
+                      Watch Now
+                    </Button>
 
-                  {/* Watchlist with logic */}
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    onClick={() => setIsInWatchlist(!isInWatchlist)}
-                    className={isInWatchlist ? "bg-primary text-primary-foreground border-primary" : ""}
-                  >
-                    <Plus className="mr-2 h-5 w-5" />
-                    {isInWatchlist ? "In Watchlist" : "Add to Watchlist"}
-                  </Button>
+                    {/* Watchlist with logic */}
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={() => setIsInWatchlist(!isInWatchlist)}
+                      className={isInWatchlist ? "bg-primary text-primary-foreground border-primary" : ""}>
+                      <Plus className="mr-2 h-5 w-5" />
+                      {isInWatchlist ? "In Watchlist" : "Add to Watchlist"}
+                    </Button>
 
-                  {/* Download */}
-                  <Button size="lg" variant="outline">
-                    <Download className="mr-2 h-5 w-5" />
-                    Download
-                  </Button>
+                    {/* Download */}
+                    <Button size="lg" variant="outline">
+                      <Download className="mr-2 h-5 w-5" />
+                      Download
+                    </Button>
 
-                  {/* Share */}
-                  <Button size="lg" variant="outline">
-                    <Share2 className="h-5 w-5" />
-                  </Button>
-                </div>
+                    {/* Share */}
+                    <Button size="lg" variant="outline">
+                      <Share2 className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -281,9 +280,8 @@ export default function MediaPage({ params }: { params: { id: string } }) {
                             onClick={() => handleRating(star)}
                             className={cn(
                               "p-1 rounded transition-colors",
-                              star <= userRating ? "text-yellow-400" : "text-muted-foreground hover:text-yellow-400",
-                            )}
-                          >
+                              star <= userRating ? "text-yellow-400" : "text-muted-foreground hover:text-yellow-400"
+                            )}>
                             <Star className="w-6 h-6 fill-current" />
                           </button>
                         ))}
@@ -298,8 +296,7 @@ export default function MediaPage({ params }: { params: { id: string } }) {
                         variant="outline"
                         size="sm"
                         onClick={() => setIsLiked(!isLiked)}
-                        className={isLiked ? "bg-green-500/20 text-green-400 border-green-500/30" : ""}
-                      >
+                        className={isLiked ? "bg-green-500/20 text-green-400 border-green-500/30" : ""}>
                         <ThumbsUp className="w-4 h-4 mr-2" />
                         {isLiked ? "Liked" : "Like"}
                       </Button>
@@ -406,5 +403,5 @@ export default function MediaPage({ params }: { params: { id: string } }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
