@@ -1,9 +1,43 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { CarouselSpacing } from "@/components/landing-carousel"
 import Link from "next/link"
+import { useEffect, useState } from "react";
+type MediaRow = {
+  media_id: number;
+  title: string;
+  image: string;
+}
 
-export default function LandingPage(){
+export default function LandingPage() {
+  const [trendingMedia, setTrendingMedia] = useState<MediaRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTrending() {
+      try {
+        const res = await fetch("/api/media");
+        if (!res.ok) throw new Error("Failed to fetch media");
+        const data: MediaRow[] = await res.json();
+        const mapped = data
+          .filter((m) => m.media_id)
+          .map((m) => ({
+            media_id: m.media_id,
+            title: m.title || "Untitled",
+            image: m.image || "/placeholder.svg",
+          }));
+        setTrendingMedia(mapped);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTrending();
+  }, []);
   return (
     <div className="min-h-screen bg-background">
 
@@ -46,7 +80,11 @@ export default function LandingPage(){
       <section className="py-16 px-4">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold mb-8 text-center">Trending Now</h2>
-          <CarouselSpacing/>
+          {loading ? (
+            <p className="text-center text-white">Loading trending media...</p>
+          ) : (
+            <CarouselSpacing media={trendingMedia} />
+          )}
         </div>
       </section>
 

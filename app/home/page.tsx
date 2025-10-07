@@ -96,7 +96,6 @@ export default function HomePage() {
       try {
         const [mediaRes, watchRes] = await Promise.all([
           fetch("/api/media", { cache: "no-store" }),
-          // Replace `1` with the actual authenticated user id when available
           fetch(`/api/user/1/watch-history`, { cache: "no-store" }).catch(() => null),
         ]);
 
@@ -119,7 +118,6 @@ export default function HomePage() {
           setContinueWatching([]);
         }
       } catch (e) {
-        // Swallow errors for now; UI will render empty sections
         if (isMounted) {
           setFeaturedContent([]);
           setTrendingMovies([]);
