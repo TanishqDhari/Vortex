@@ -67,30 +67,48 @@ export default function MediaPage({ params }: { params: { id: string } }) {
 
         const m = data[0];
 
-        // Transform API data to match the expected format
-        const transformedMedia: MediaData = {
-          id: m.media_id,
-          title: m.title || "Untitled",
-          year: m.release_date.slice(0, 4) || 0,
-          rating: m.rating || 0,
-          userRating: 0,
-          duration: m.duration ? `${Math.floor(m.duration / 60)}h ${m.duration % 60}m` : "N/A",
-          genre: Array.isArray(m.genres) ? m.genres : [],
-          ageRating: "PG-13",
-          synopsis: m.synopsis || "No synopsis available",
-          director: "Unknown Director",
-          studio: "Unknown Studio",
-          cast: Array.isArray(m.cast) ? m.cast : [],
-          poster: m.image || "/placeholder.svg",
-          backdrop: m.image || "/placeholder.svg",
-          trailers: [],
-          viewCount: `${m.views || 0} views`,
-          releaseDate: m.release_year ? new Date(m.release_year, 0, 1).toLocaleDateString() : "Unknown",
-          awards: [],
-          isLiked: false,
-          isInWatchlist: false,
-          progress: 0,
-        };
+// Parse duration "hh:mm:ss" → "2h 28m"
+const formatDuration = (time: string | null) => {
+  if (!time) return "N/A";
+  const [h, m] = time.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return "N/A";
+  return `${h}h ${m}m`;
+};
+
+  const transformedMedia: MediaData = {
+    id: m.media_id,
+    title: m.title || "Untitled",
+    year: m.release_date ? new Date(m.release_date).getFullYear() : 0,
+    rating: m.rating || 0,
+    userRating: 0,
+    duration: formatDuration(m.duration),
+    genre: Array.isArray(m.genres)
+      ? m.genres
+      : typeof m.genres === "string"
+      ? m.genres.split(",").map((g: string) => g.trim())
+      : [],
+    ageRating: "PG-13",
+    synopsis: m.synopsis || "No synopsis available",
+    director: m.director || "Unknown Director",
+    studio: m.studio || "Unknown Studio",
+    cast: Array.isArray(m.cast) ? m.cast : [],
+    poster: m.image || "/placeholder.svg",
+    backdrop: m.image || "/placeholder.svg",
+    trailers: [],
+    viewCount: `${m.views || 0} views`,
+    releaseDate: m.release_date
+      ? new Date(m.release_date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : "Unknown",
+    awards: [],
+    isLiked: false,
+    isInWatchlist: false,
+    progress: 0,
+  };
+
 
         setMedia(transformedMedia);
         setUserRating(transformedMedia.userRating);
