@@ -109,7 +109,7 @@ export default function SeriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex mb-10">
       <Sidebar />
       <main className="flex-1 ml-16 overflow-hidden">
         {/* Header */}
@@ -163,7 +163,7 @@ export default function SeriesPage() {
         </div>
 
         {/* Content Grid */}
-        <div className="p-6">
+        <div className="px-6 py-12">
           <div className="mb-4 text-muted-foreground">
             Showing {filteredShows.length} of {seriesList.length} TV shows
           </div>

@@ -22,7 +22,7 @@ const buttonVariants = cva(
         link: 
           'text-primary underline-offset-4 hover:underline',
         gradient:
-          'bg-[linear-gradient(-45deg,#192145,#210e17)] text-white shadow-md font-semibold',
+          'bg-[linear-gradient(-45deg,#192145,#210e17)] text-white shadow-md font-semibold transform transition-transform duration-200 hover:scale-105',
         normal:
           'bg-white/10 text-white flex items-center justify-center gap-2 px-6 py-2 rounded-md font-medium transition-all duration-300 hover:bg-white/20 hover:text-white',
         watchlist:

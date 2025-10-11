@@ -33,8 +33,6 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    // The main sidebar container is now the "group" for the hover effect
-    // It transitions its width and padding on hover
     <aside
       className={cn(
         "group fixed top-0 left-0 z-40 h-full border-r border-sidebar-border bg-sidebar/80 backdrop-blur-xl",
