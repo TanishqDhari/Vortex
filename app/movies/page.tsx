@@ -122,7 +122,7 @@ export default function MoviesPage() {
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar />
-      <div className="flex-1 ml-16 flex flex-col">
+      <div className="flex-1 ml-16 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border px-6 py-4">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">

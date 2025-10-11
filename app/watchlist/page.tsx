@@ -179,17 +179,17 @@ export default function WatchlistPage() {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {filteredMedia.map((item) => (
-  <MediaCard
-    key={item.id}
-    id={item.id}
-    title={item.title}
-    year={item.year ?? 0} // fallback if year is undefined
-    image={item.image}
-    rating={item.rating}
-    duration={item.duration !== undefined ? String(item.duration) : undefined}         // optional
-    genre={item.genre}
-  />
-))}
+                <MediaCard
+                  key={item.id}
+                  id={item.id}
+                  title={item.title}
+                  year={item.year ?? 0} // fallback if year is undefined
+                  image={item.image}
+                  rating={item.rating}
+                  duration={item.duration !== undefined ? String(item.duration) : undefined}         // optional
+                  genre={item.genre}
+                />
+              ))}
 
                   </div>
                 </CardContent>

@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -31,7 +30,6 @@ export default function AdminDashboard() {
   const [media, setMedia] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Fetch data from APIs
   useEffect(() => {
     async function fetchData() {
       try {
@@ -104,7 +102,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-[#0a0a0f] to-[#12091b] text-white">
-      {/* Header */}
       <div className="border-b border-gray-800 bg-black/40 backdrop-blur-md">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div>
@@ -130,7 +127,6 @@ export default function AdminDashboard() {
       </div>
 
       <div className="container mx-auto px-6 py-8">
-        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, i) => {
             const Icon = stat.icon
@@ -156,7 +152,6 @@ export default function AdminDashboard() {
           })}
         </div>
 
-        {/* Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
           <TabsList className="bg-gray-900/60 border-gray-800 rounded-lg">
             <TabsTrigger value="users" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white">
@@ -170,7 +165,6 @@ export default function AdminDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          {/* USERS */}
           <TabsContent value="users">
             <Card className="bg-[linear-gradient(-45deg,#192145,#210e17)] border border-gray-800 shadow-md">
               <CardHeader>
@@ -238,7 +232,6 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* CONTENT */}
           <TabsContent value="content">
             <Card className="bg-[linear-gradient(-45deg,#192145,#210e17)] border border-gray-800 shadow-md">
               <CardHeader className="flex justify-between">
@@ -270,7 +263,7 @@ export default function AdminDashboard() {
                         <TableCell className="text-gray-400">
                           {Array.isArray(m.genres) ? m.genres.join(", ") : m.genres || "Unknown"}
                         </TableCell>
-                        <TableCell><span className="text-amber-400">★</span> {m.rating?.toFixed(1) || "N/A"}</TableCell>
+                        <TableCell><span className="text-amber-400">★</span> {m.rating != null ? Number(m.rating).toFixed(1) : "N/A"}</TableCell>
                         <TableCell><Badge variant="outline" className={getStatusColor("Published")}>Published</Badge></TableCell>
                         <TableCell>
                           <DropdownMenu>
