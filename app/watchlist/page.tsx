@@ -6,7 +6,7 @@ import { MediaCard } from "@/components/media-card";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Bookmark } from "lucide-react";
+import { Search, Bookmark, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type MediaItem = {
@@ -145,6 +145,10 @@ export default function WatchlistPage() {
         </div>
 
         {/* Watchlists */}
+        <Button variant="gradient" className= " mx-6 bg-transparent mt-6">
+          <Plus className="w-4 h-4 mr-2" />
+          Create List
+        </Button> 
         <div className="p-6 space-y-8">
           {watchlists.map((list) => {
             const filteredMedia = list.media.filter((item) => {
@@ -161,7 +165,7 @@ export default function WatchlistPage() {
             if (filteredMedia.length === 0) return null;
 
             return (
-              <Card key={list.id} className="p-4">
+              <Card key={list.id} className="p-4 bg-black/20  ">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-2xl flex justify-between items-center">
                     <div>
@@ -177,20 +181,19 @@ export default function WatchlistPage() {
                 </CardHeader>
 
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 mb-8">
                     {filteredMedia.map((item) => (
-  <MediaCard
-    key={item.id}
-    id={item.id}
-    title={item.title}
-    year={item.year ?? 0} // fallback if year is undefined
-    image={item.image}
-    rating={item.rating}
-    duration={item.duration !== undefined ? String(item.duration) : undefined}         // optional
-    genre={item.genre}
-  />
-))}
-
+                      <MediaCard
+                        key={item.id}
+                        id={item.id}
+                        title={item.title}
+                        year={item.year ?? 0}
+                        image={item.image}
+                        rating={item.rating}
+                        duration={item.duration !== undefined ? String(item.duration) : undefined}
+                        genre={item.genre}
+                      />
+                    ))}
                   </div>
                 </CardContent>
               </Card>

@@ -25,9 +25,9 @@ export function MediaCard({
   duration = "7 Seasons",
   description = "The city's most highly skilled medical team saves lives while navigating their unique interpersonal relationships.",
 }: MediaCardProps) {
+  
   return (
-    <div className="group relative w-full aspect-[2/3] lg:hover:z-50">
-      
+    <div className="group relative w-full aspect-[2/3]">
       {/* The Static Base Card */}
       <div className="w-full h-full overflow-hidden rounded-md transition-opacity duration-300 lg:group-hover:opacity-0">
         <img
@@ -57,14 +57,12 @@ export function MediaCard({
                 className="w-full h-full object-cover"
               />
             </div>
-            {/* THE CHANGE IS HERE: Replaced `gap-2` with `justify-between` */}
             <div className="w-full h-[45%] p-4 flex flex-col justify-between">
-              {/* This div stays at the top */}
               <div>
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
-                    className="h-8 flex-1 bg-white text-black hover:bg-white/90"
+                    variant= "gradient"
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
