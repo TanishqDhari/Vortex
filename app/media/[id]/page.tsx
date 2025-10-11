@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +32,7 @@ type MediaData = {
   genre: string[];
   ageRating: string;
   synopsis: string;
-  director: string;
+  directors: string[];
   studio: string;
   cast: { name: string; role: string; image: string }[];
   poster: string;
@@ -46,8 +46,9 @@ type MediaData = {
   progress: number;
 };
 
-export default function MediaPage({ params }: { params: { id: string } }) {
-  const mediaId = Number.parseInt(params.id);
+export default function MediaPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = React.use(params); 
+  const mediaId = Number.parseInt(resolvedParams.id);
   const [media, setMedia] = useState<MediaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -62,6 +63,7 @@ export default function MediaPage({ params }: { params: { id: string } }) {
         const res = await fetch(`/api/media/${mediaId}`);
         if (!res.ok) throw new Error("Media not found");
         const data = await res.json();
+        console.log(data);
 
         if (!data || data.length === 0) throw new Error("Media not found");
 
@@ -75,39 +77,37 @@ const formatDuration = (time: string | null) => {
   return `${h}h ${m}m`;
 };
 
-  const transformedMedia: MediaData = {
-    id: m.media_id,
-    title: m.title || "Untitled",
-    year: m.release_date ? new Date(m.release_date).getFullYear() : 0,
-    rating: m.rating || 0,
-    userRating: 0,
-    duration: formatDuration(m.duration),
-    genre: Array.isArray(m.genres)
-      ? m.genres
-      : typeof m.genres === "string"
-      ? m.genres.split(",").map((g: string) => g.trim())
-      : [],
-    ageRating: "PG-13",
-    synopsis: m.synopsis || "No synopsis available",
-    director: m.director || "Unknown Director",
-    studio: m.studio || "Unknown Studio",
-    cast: Array.isArray(m.cast) ? m.cast : [],
-    poster: m.image || "/placeholder.svg",
-    backdrop: m.image || "/placeholder.svg",
-    trailers: [],
-    viewCount: `${m.views || 0} views`,
-    releaseDate: m.release_date
-      ? new Date(m.release_date).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })
-      : "Unknown",
-    awards: [],
-    isLiked: false,
-    isInWatchlist: false,
-    progress: 0,
-  };
+const cast = typeof m.cast === "string" ? JSON.parse(m.cast) : m.cast || [];
+const directors = typeof m.directors === "string" ? JSON.parse(m.directors) : m.directors || [];
+const studios = typeof m.studios === "string" ? JSON.parse(m.studios) : m.studios || [];
+const genres = typeof m.genres === "string" ? JSON.parse(m.genres) : m.genres || [];
+
+
+const transformedMedia: MediaData = {
+  id: m.media_id,
+  title: m.title || "Untitled",
+  year: m.release_date ? new Date(m.release_date).getFullYear() : 0,
+  rating: m.rating !== null && m.rating !== undefined 
+  ? parseFloat(Number(m.rating).toFixed(2)) 
+  : 0,
+  userRating: 0,
+  duration: formatDuration(m.duration),
+  genre: genres.map((g: any) => g.title),
+  ageRating: m.age_rating || "PG-13",
+  synopsis: m.synopsis || "No synopsis available",
+  directors: directors.map((d: any) => d.name),
+  studio: studios,
+  cast: cast,
+  poster: m.image || "/placeholder.svg",
+  backdrop: m.image || "/placeholder.svg",
+  trailers: [],
+  viewCount: `${m.views || 0} views`,
+  releaseDate: m.release_date || "Unknown",
+  awards: [],
+  isLiked: false,
+  isInWatchlist: false,
+  progress: 0,
+};
 
 
         setMedia(transformedMedia);
@@ -139,6 +139,7 @@ const formatDuration = (time: string | null) => {
   }
 
   if (error || !media) {
+    console.log(error)
     return (
       <div className="min-h-screen bg-background flex">
         <Sidebar />
@@ -262,10 +263,12 @@ const formatDuration = (time: string | null) => {
                     </div>
                     <div className="flex items-center space-x-3">
                       <Users className="w-5 h-5 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">Director</p>
-                        <p className="text-muted-foreground">{media.director}</p>
-                      </div>
+                      {media.directors.map((a, idx) => (
+                        <div key={idx}>
+                          <p className="font-medium">Director</p>
+                          <p className="text-muted-foreground">{a}</p>
+                        </div>
+                      ))}
                     </div>
                     <div className="flex items-center space-x-3">
                       <Award className="w-5 h-5 text-muted-foreground" />
