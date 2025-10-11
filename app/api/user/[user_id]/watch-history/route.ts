@@ -3,7 +3,8 @@ import db from "@/app/api/lib/db";
 
 type Params = { params: { user_id: string } };
 
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: Request, context: { params: Promise<{ user_id: string }> }) {
+  const { user_id } = await context.params;
   try {
     const [rows] = await db.query(
       `
@@ -12,7 +13,7 @@ export async function GET(_req: Request, { params }: Params) {
       JOIN media m ON wh.media_id = m.media_id
       WHERE wh.user_id = ?
       `,
-      [params.user_id]
+      [user_id]
     );
     return NextResponse.json(rows);
   } catch (err) {

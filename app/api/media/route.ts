@@ -20,11 +20,6 @@ export async function GET() {
       WHERE d.media_id = m.media_id  
     ) AS studio,
     (
-      SELECT JSON_ARRAYAGG(t.trailer_url)  -- or t.title, whatever column you want
-      FROM trailer t
-      WHERE t.media_id = m.media_id  
-    ) AS trailer,
-    (
       SELECT JSON_ARRAYAGG(
         JSON_OBJECT(
           'name', CONCAT(c.fname, ' ', c.lname),

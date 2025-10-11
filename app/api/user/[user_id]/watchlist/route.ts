@@ -1,10 +1,11 @@
+// app/api/user/[user_id]/watchlist/route.ts
 import { NextResponse } from "next/server";
 import db from "@/app/api/lib/db";
 
-type Params = { params: { user_id: string } };
-
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: Request, context: { params: Promise<{ user_id: string }> }) {
   try {
+    const { user_id } = await context.params; // ✅ await params first
+
     const [rows] = await db.query(
       `
       SELECT m.*
@@ -13,11 +14,15 @@ export async function GET(_req: Request, { params }: Params) {
       JOIN media m ON wm.media_id = m.media_id
       WHERE w.user_id = ?
       `,
-      [params.user_id]
+      [user_id]
     );
+
     return NextResponse.json(rows);
   } catch (err) {
-    const error = err as Error;
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Error fetching watchlist:", err);
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 500 }
+    );
   }
 }

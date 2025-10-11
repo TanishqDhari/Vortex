@@ -20,6 +20,7 @@ type UserData = {
   dob: string;
   login_type: string;
   created_at?: string;
+  user_password: string;
 }
 
 type MediaItem = {
@@ -334,7 +335,6 @@ export default function ProfilePage() {
                         rating={item.rating || 0}
                         image={item.image || "/placeholder.svg"}
                         genre={item.genres || []}
-                        showProgress 
                       />
                     ))}
                   </div>
@@ -549,11 +549,11 @@ export default function ProfilePage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label className="text-muted-foreground">First Name</Label>
-                          <p className="font-medium">{userData.firstName}</p>
+                          <p className="font-medium">{userData.fname}</p>
                         </div>
                         <div>
                           <Label className="text-muted-foreground">Last Name</Label>
-                          <p className="font-medium">{userData.lastName}</p>
+                          <p className="font-medium">{userData.lname}</p>
                         </div>
                       </div>
                       <div>
@@ -562,7 +562,7 @@ export default function ProfilePage() {
                       </div>
                       <div>
                         <Label className="text-muted-foreground">Date of Birth</Label>
-                        <p className="font-medium">{new Date(userData.dateOfBirth).toLocaleDateString()}</p>
+                        <p className="font-medium">{new Date(userData.dob).toLocaleDateString()}</p>
                       </div>
                       <Button variant="outline" onClick={() => setIsEditing(true)}>
                         <Edit className="w-4 h-4 mr-2" />
