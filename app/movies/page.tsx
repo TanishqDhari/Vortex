@@ -110,7 +110,7 @@ export default function MoviesPage() {
           case "title":
             return a.title.localeCompare(b.title);
           default:
-            return 0; // popularity fallback (or implement your own)
+            return 0;
         }
       });
   }, [movies, searchQuery, selectedGenre, selectedYear, selectedRating, sortBy]);

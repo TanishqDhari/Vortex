@@ -94,7 +94,6 @@ export default function ProfilePage() {
     console.log(storedUserId);
     
       try {
-        // Example after login
         
         const [userRes, historyRes, watchlistRes] = await Promise.all([
           fetch(`/api/user/${userId}`),

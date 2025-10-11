@@ -14,17 +14,6 @@ export async function GET() {
       WHERE mg.media_id = m.media_id  
     ) AS genres,
     (
-      SELECT JSON_ARRAYAGG(s.studio_name)
-      FROM distributed_by d
-      JOIN studio s ON s.studio_id = d.studio_id
-      WHERE d.media_id = m.media_id  
-    ) AS studio,
-    (
-      SELECT JSON_ARRAYAGG(t.trailer_url)  -- or t.title, whatever column you want
-      FROM trailer t
-      WHERE t.media_id = m.media_id  
-    ) AS trailer,
-    (
       SELECT JSON_ARRAYAGG(
         JSON_OBJECT(
           'name', CONCAT(c.fname, ' ', c.lname),
@@ -36,16 +25,6 @@ export async function GET() {
       JOIN crew c ON c.crew_id = ct.crew_id
       WHERE ct.media_id = m.media_id
     ) AS cast,
-    (
-      SELECT JSON_OBJECT(
-        'name', CONCAT(c.fname, ' ', c.lname),
-        'role', ct.crew_role,
-        'image', c.image
-      )
-      FROM contribution ct
-      JOIN crew c ON c.crew_id = ct.crew_id
-      WHERE ct.media_id = m.media_id AND ct.crew_role = 'director'
-    ) AS director,
     (
       SELECT AVG(r.rating)
       FROM review r

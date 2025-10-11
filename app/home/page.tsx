@@ -36,15 +36,7 @@ function minutesToDuration(minutes?: number | null): string {
   return `${hrs}h ${mins}m`;
 }
 
-// function parseGenres(value: unknown): string[] | string {
-//   if (!value) return [];
-//   if (Array.isArray(value)) return value as string[];
-//   if (typeof value === "string") return value.includes(",") ? value.split(",").map((g) => g.trim()) : value;
-//   return [];
-// }
-
 function mapRowToCard(row: MediaRow): CardItem {
-  // Parse genres from the API response
   let genresArray: string[] = [];
   if (row.genres) {
     if (Array.isArray(row.genres)) {
@@ -91,7 +83,6 @@ export default function HomePage() {
 
   useEffect(() => {
     let isMounted = true;
-
     async function load() {
       try {
         const [mediaRes, watchRes] = await Promise.all([
@@ -102,12 +93,10 @@ export default function HomePage() {
         if (!mediaRes.ok) throw new Error("Failed to load media");
         const mediaRows: MediaRow[] = await mediaRes.json();
 
-        // Trending/Popular/Recommended all derive from media for now
         const cards = mediaRows.map(mapRowToCard).filter((c) => c.id);
 
         if (isMounted) {
           setTrendingMovies(cards);
-          // Use top 3 as featured
           setFeaturedContent(mediaRows.slice(0, 3).map(mapRowToHero));
         }
 
