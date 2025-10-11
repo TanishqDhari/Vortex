@@ -26,7 +26,6 @@ const navigation = [
 
 const bottomNavigation = [
   { name: "Profile", href: "/profile", icon: User },
-  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {

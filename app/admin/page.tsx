@@ -270,7 +270,7 @@ export default function AdminDashboard() {
                         <TableCell className="text-gray-400">
                           {Array.isArray(m.genres) ? m.genres.join(", ") : m.genres || "Unknown"}
                         </TableCell>
-                        <TableCell><span className="text-amber-400">★</span> {m.rating?.toFixed(1) || "N/A"}</TableCell>
+                        {/* <TableCell><span className="text-amber-400">★</span> {m.rating?.toFixed(1) || "N/A"}</TableCell> */}
                         <TableCell><Badge variant="outline" className={getStatusColor("Published")}>Published</Badge></TableCell>
                         <TableCell>
                           <DropdownMenu>

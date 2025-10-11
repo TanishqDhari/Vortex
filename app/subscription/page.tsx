@@ -92,69 +92,93 @@ export default function SubscriptionPage() {
           <TabsContent value="plans" className="space-y-6">
             {/* Billing Toggle */}
             <Card>
-              <CardContent className="p-6 flex items-center justify-center space-x-4">
-                <Label className={billingCycle === "monthly" ? "font-semibold" : ""}>Monthly</Label>
-                <Switch
-                  checked={billingCycle === "yearly"}
-                  onCheckedChange={(checked) => setBillingCycle(checked ? "yearly" : "monthly")}
-                />
-                <Label className={billingCycle === "yearly" ? "font-semibold" : ""}>
-                  Yearly
-                  <Badge className="ml-2 bg-green-500/20 text-green-400 border-green-500/30">Save 20%</Badge>
-                </Label>
+              <CardContent className="flex justify-center p-4 bg-card/50 rounded-lg">
+                <div className="flex rounded-full bg-muted p-1">
+                  {/* Monthly */}
+                  <div
+                    className={`cursor-pointer px-4 py-1 rounded-full font-semibold transition-colors ${
+                      billingCycle === "monthly" ? "bg-primary text-background" : "text-muted-foreground"
+                    }`}
+                    onClick={() => setBillingCycle("monthly")}
+                  >
+                    Monthly
+                  </div>
+                  {/* Yearly */}
+                  <div
+                    className={`cursor-pointer px-4 py-1 rounded-full font-semibold flex items-center transition-colors ${
+                      billingCycle === "yearly" ? "bg-primary text-background" : "text-muted-foreground"
+                    }`}
+                    onClick={() => setBillingCycle("yearly")}
+                  >
+                    Yearly
+                    <Badge className="ml-2 bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                      Save 20%
+                    </Badge>
+                  </div>
+                </div>
               </CardContent>
             </Card>
+                    
 
             {/* Pricing Plans */}
             <div className="grid md:grid-cols-3 gap-6">
-              {subscriptionPlans.map((plan) => (
-                <Card
-                  key={plan.plan_id}
-                  className={`relative border ${plan.plan_name === "Premium" ? "ring-2 ring-primary" : ""} ${
-                    selectedPlan === plan.plan_id ? "ring-2 ring-primary" : ""
-                  } transition-all hover:shadow-lg cursor-pointer`}
-                  onClick={() => handlePlanChange(plan.plan_id)}>
-                  {plan.plan_name === "Premium" && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-primary text-primary-foreground">
-                        <Star className="w-3 h-3 mr-1" />
-                        Most Popular
-                      </Badge>
-                    </div>
-                  )}
-                  <CardHeader className="text-center pb-4">
-                    <CardTitle className="text-2xl">{plan.plan_name}</CardTitle>
-                    <div className="space-y-2">
-                      <div className="text-4xl font-bold text-primary">${plan.price}</div>
-                      <p className="text-muted-foreground">per {plan.billing_cycle}</p>
-                    </div>
-                    <p className="text-muted-foreground">{plan.plan_name} subscription plan</p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
-                        <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                        <span className="text-sm">Up to {plan.device_limit} devices</span>
+              {subscriptionPlans.map((plan) => {
+                const price = billingCycle === "monthly" ? plan.priceMonthly : plan.priceYearly;
+                const suffix = billingCycle === "monthly" ? "mo" : "yr";
+
+                return (
+                  <Card
+                    key={plan.plan_id}
+                    className={`relative border ${
+                      selectedPlan === plan.plan_id ? "ring-2 ring-primary" : ""
+                    } transition-all hover:shadow-lg cursor-pointer`}
+                    onClick={() => handlePlanChange(plan.plan_id)}
+                  >
+                    {plan.plan_name === "Premium" && (
+                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <Badge className="bg-yellow-500 text-black">
+                          <Star className="w-3 h-3 mr-1" />
+                          Most Popular
+                        </Badge>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                        <span className="text-sm">{plan.video_quality} video quality</span>
+                    )}
+                    <CardHeader className="text-center pb-4">
+                      <CardTitle className="text-2xl">{plan.plan_name}</CardTitle>
+                      <div className="space-y-2">
+                        <div className="text-4xl font-bold text-primary">
+                          ${plan.price}/{suffix}
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                        <span className="text-sm">Unlimited streaming</span>
+                      <p className="text-muted-foreground">{plan.plan_name} subscription plan</p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
+                          <span className="text-sm">Up to {plan.device_limit} devices</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
+                          <span className="text-sm">{plan.video_quality} video quality</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
+                          <span className="text-sm">Unlimited streaming</span>
+                        </div>
                       </div>
-                    </div>
-                    <Button
-                      className="w-full"
-                      variant={selectedPlan === plan.plan_id ? "default" : "outline"}
-                      onClick={() => handlePlanChange(plan.plan_id)}>
-                      {currentSubscription?.plan === plan.plan_name ? "Current Plan" : "Choose Plan"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                      <Button
+                        className="w-full"
+                        variant={selectedPlan === plan.plan_id ? "default" : "outline"}
+                        onClick={() => handlePlanChange(plan.plan_id)}
+                      >
+                        {currentSubscription?.plan === plan.plan_name ? "Current Plan" : "Choose Plan"}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
+
           </TabsContent>
 
           {/* Current Plan Tab */}

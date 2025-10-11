@@ -60,6 +60,7 @@ export default function MediaPage({ params }: { params: { id: string } }) {
       try {
         setLoading(true);
         const res = await fetch(`/api/media/${mediaId}`);
+        console.log(res);
         if (!res.ok) throw new Error("Media not found");
         const data = await res.json();
 
@@ -67,7 +68,6 @@ export default function MediaPage({ params }: { params: { id: string } }) {
 
         const m = data[0];
 
-// Parse duration "hh:mm:ss" → "2h 28m"
 const formatDuration = (time: string | null) => {
   if (!time) return "N/A";
   const [h, m] = time.split(":").map(Number);

@@ -45,16 +45,6 @@ const watchHistory = Array.from({ length: 12 }, (_, i) => ({
   progress: Math.floor(Math.random() * 100),
 }))
 
-const watchlist = Array.from({ length: 8 }, (_, i) => ({
-  id: i + 1,
-  title: `Watchlist Item ${i + 1}`,
-  year: 2024,
-  rating: 8.0 + Math.random(),
-  image: `/placeholder.svg?height=400&width=300&query=watchlist item ${i + 1}`,
-  genre: ["Drama", "Thriller"],
-  addedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-}))
-
 const paymentHistory = [
   { id: 1, date: "2024-11-15", amount: "$14.99", plan: "Premium", status: "Paid", method: "Credit Card" },
   { id: 2, date: "2024-10-15", amount: "$14.99", plan: "Premium", status: "Paid", method: "Credit Card" },
@@ -66,7 +56,6 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [userData, setUserData] = useState<UserData | null>(null)
   const [watchHistory, setWatchHistory] = useState<MediaItem[]>([])
-  const [watchlist, setWatchlist] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
     firstName: "",
@@ -93,10 +82,9 @@ export default function ProfilePage() {
     }
     
       try {        
-        const [userRes, historyRes, watchlistRes] = await Promise.all([
+        const [userRes, historyRes] = await Promise.all([
           fetch(`/api/user/${userId}`),
           fetch(`/api/user/${userId}/watch-history`),
-          fetch(`/api/user/${userId}/watchlist`)
         ]);
         
         if (userRes.ok) {
@@ -116,11 +104,6 @@ export default function ProfilePage() {
         if (historyRes.ok) {
           const history = await historyRes.json();
           setWatchHistory(history);
-        }
-
-        if (watchlistRes.ok) {
-          const watchlistData = await watchlistRes.json();
-          setWatchlist(watchlistData);
         }
       } catch (error) {
         console.error("Failed to fetch user data:", error);
@@ -205,9 +188,8 @@ export default function ProfilePage() {
 
         <div className="p-6">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="watchlist">Watchlist</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
               <TabsTrigger value="subscription">Subscription</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -254,17 +236,11 @@ export default function ProfilePage() {
               </Card>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-primary">{watchHistory.length}</div>
                     <p className="text-sm text-muted-foreground">Items Watched</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-primary">{watchlist.length}</div>
-                    <p className="text-sm text-muted-foreground">Watchlist Items</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -326,33 +302,6 @@ export default function ProfilePage() {
                         image={item.image || "/placeholder.svg"}
                         genre={item.genres || []}
                       />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="watchlist" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Bookmark className="w-5 h-5 mr-2" />
-                    My Watchlist ({watchlist.length} items)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {watchlist.map((item) => (
-                      <div key={item.media_id} className="space-y-2">
-                        <MediaCard 
-                          id={item.media_id}
-                          title={item.title || "Untitled"}
-                          year={item.release_year || 0}
-                          rating={item.rating || 0}
-                          image={item.image || "/placeholder.svg"}
-                          genre={item.genres || []}
-                        />
-                      </div>
                     ))}
                   </div>
                 </CardContent>
@@ -572,7 +521,6 @@ export default function ProfilePage() {
                   <div className="flex items-center justify-between p-4 bg-card/50 rounded-lg">
                     <div>
                       <h4 className="font-medium text-foreground">Password</h4>
-                      <p className="text-sm text-muted-foreground">Last updated 3 months ago</p>
                     </div>
                     <Button variant="outline">Change Password</Button>
                   </div>
