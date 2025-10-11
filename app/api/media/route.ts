@@ -14,6 +14,12 @@ export async function GET() {
       WHERE mg.media_id = m.media_id  
     ) AS genres,
     (
+      SELECT JSON_ARRAYAGG(s.studio_name)
+      FROM distributed_by d
+      JOIN studio s ON s.studio_id = d.studio_id
+      WHERE d.media_id = m.media_id  
+    ) AS studio,
+    (
       SELECT JSON_ARRAYAGG(
         JSON_OBJECT(
           'name', CONCAT(c.fname, ' ', c.lname),

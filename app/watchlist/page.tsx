@@ -4,76 +4,64 @@ import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { MediaCard } from "@/components/media-card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Bookmark } from "lucide-react";
+import { Search, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type WatchlistItem = {
+type MediaItem = {
   id: number;
   title: string;
-  year: number;
-  rating: number;
+  year?: number;
+  rating?: number;
   image: string;
   genre: string[];
-  type: "movie" | "tv";
-  addedAt: string;
+  type?: "movie" | "tv";
+  duration?: number;
 };
 
-type CustomList = {
+type Watchlist = {
   id: number;
   name: string;
-  count: number;
-  isPublic: boolean;
+  desc: string;
+  visibility: boolean;
+  media: MediaItem[];
 };
 
 export default function WatchlistPage() {
-  const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
-  const [customLists, setCustomLists] = useState<CustomList[]>([]);
+  const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedGenre, setSelectedGenre] = useState("all");
   const [sortBy, setSortBy] = useState("added");
 
   useEffect(() => {
-    async function fetchWatchlist() {
+    async function fetchWatchlists() {
       try {
-        // For now, using user_id = 1, in a real app this would come from authentication
-        const userId = 1;
+        const storedUserId = localStorage.getItem("userId");
+        if (!storedUserId) {
+          console.log("No userId found in localStorage. Redirecting to login.");
+          window.location.href = "/login";
+          return;
+        }
+        const userId = parseInt(storedUserId, 10);
+        if (isNaN(userId) || userId <= 0) {
+          console.log("Invalid userId in localStorage. Redirecting to login.");
+          window.location.href = "/login";
+          return;
+        }
         const res = await fetch(`/api/user/${userId}/watchlist`);
-        if (!res.ok) throw new Error("Failed to load watchlist");
+        if (!res.ok) throw new Error("Failed to load watchlists");
         const data = await res.json();
-        
-        // Transform the data to match our component's expected format
-        const transformedItems = data.map((item: any) => ({
-          id: item.media_id,
-          title: item.title,
-          year: item.release_year,
-          rating: item.rating || 0,
-          image: item.image || "/placeholder.svg",
-          genre: Array.isArray(item.genres) ? item.genres : [],
-          type: "movie" as const, // You might want to add a type field to distinguish
-          addedAt: new Date().toLocaleDateString()
-        }));
-        
-        setWatchlistItems(transformedItems);
-        setCustomLists([]); // Mock custom lists for now
+        console.log(data);
+        setWatchlists(data);
       } catch (err) {
         console.error(err);
-        setWatchlistItems([]);
-        setCustomLists([]);
+        setWatchlists([]);
       }
     }
-    fetchWatchlist();
+    fetchWatchlists();
   }, []);
-
-  const filteredItems = watchlistItems.filter((item) => {
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = selectedType === "all" || item.type === selectedType;
-    const matchesGenre = selectedGenre === "all" || item.genre.includes(selectedGenre);
-    return matchesSearch && matchesType && matchesGenre;
-  });
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -83,26 +71,28 @@ export default function WatchlistPage() {
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="px-6 py-4">
-            <h1 className="text-3xl font-bold text-foreground flex items-center mb-1">
+            <h1 className="text-3xl font-bold flex items-center mb-1">
               <Bookmark className="w-8 h-8 mr-3" />
-              My Watchlist
+              My Watchlists
             </h1>
-            <p className="text-muted-foreground mb-4">{filteredItems.length} items in your watchlist</p>
+            <p className="text-muted-foreground mb-4">
+              {watchlists.length} total lists
+            </p>
 
-            {/* Search and Filters */}
+            {/* Filters */}
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1 relative h-10">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
                 <Input
-                  placeholder="Search your watchlist..."
+                  placeholder="Search lists or titles..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-full text-sm leading-none"
+                  className="pl-10 h-full text-sm"
                 />
               </div>
 
               <div className="flex flex-wrap gap-4">
-                {/* Type Filter */}
+                {/* Type */}
                 <div className="flex flex-col">
                   <span className="text-sm text-muted-foreground mb-1">Type</span>
                   <Select value={selectedType} onValueChange={setSelectedType}>
@@ -117,7 +107,7 @@ export default function WatchlistPage() {
                   </Select>
                 </div>
 
-                {/* Genre Filter */}
+                {/* Genre */}
                 <div className="flex flex-col">
                   <span className="text-sm text-muted-foreground mb-1">Genre</span>
                   <Select value={selectedGenre} onValueChange={setSelectedGenre}>
@@ -134,7 +124,7 @@ export default function WatchlistPage() {
                   </Select>
                 </div>
 
-                {/* Sort By */}
+                {/* Sort */}
                 <div className="flex flex-col">
                   <span className="text-sm text-muted-foreground mb-1">Sort by</span>
                   <Select value={sortBy} onValueChange={setSortBy}>
@@ -154,50 +144,64 @@ export default function WatchlistPage() {
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
-          <div className="grid lg:grid-cols-4 gap-6">
-            {/* Custom Lists Sidebar */}
-            <div className="lg:col-span-1">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Custom Lists</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {customLists.map((list) => (
-                    <div
-                      key={list.id}
-                      className="flex items-center justify-between p-3 bg-card/50 rounded-lg hover:bg-card/80 transition-colors cursor-pointer">
-                      <div>
-                        <h4 className="font-medium text-foreground">{list.name}</h4>
-                        <p className="text-xs text-muted-foreground">
-                          {list.count} items • {list.isPublic ? "Public" : "Private"}
-                        </p>
-                      </div>
+        {/* Watchlists */}
+        <div className="p-6 space-y-8">
+          {watchlists.map((list) => {
+            const filteredMedia = list.media.filter((item) => {
+              const matchesSearch =
+                item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                list.name.toLowerCase().includes(searchQuery.toLowerCase());
+              const matchesType =
+                selectedType === "all" || item.type === selectedType;
+              const matchesGenre =
+                selectedGenre === "all" || item.genre.includes(selectedGenre);
+              return matchesSearch && matchesType && matchesGenre;
+            });
+
+            if (filteredMedia.length === 0) return null;
+
+            return (
+              <Card key={list.id} className="p-4">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-2xl flex justify-between items-center">
+                    <div>
+                      {list.name}
+                      <p className="text-sm text-muted-foreground">
+                        {list.desc || "No description"}
+                      </p>
                     </div>
-                  ))}
-                  <Button variant="normal" className="w-full bg-transparent">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create List
-                  </Button>
+                    <span className="text-xs text-muted-foreground">
+                      {list.visibility ? "Public" : "Private"}
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {filteredMedia.map((item) => (
+  <MediaCard
+    key={item.id}
+    id={item.id}
+    title={item.title}
+    year={item.year ?? 0} // fallback if year is undefined
+    image={item.image}
+    rating={item.rating}
+    duration={item.duration !== undefined ? String(item.duration) : undefined}         // optional
+    genre={item.genre}
+  />
+))}
+
+                  </div>
                 </CardContent>
               </Card>
-            </div>
+            );
+          })}
 
-            {/* Main Watchlist */}
-            <div className="lg:col-span-3">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredItems.map((item) => (
-                  <div key={item.id}>
-                    <MediaCard {...item} />
-                    <div className="mt-2 space-y-1">
-                      <p className="text-xs text-muted-foreground">Added {item.addedAt}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          {watchlists.length === 0 && (
+            <p className="text-muted-foreground text-center mt-20">
+              You have no watchlists yet.
+            </p>
+          )}
         </div>
       </div>
     </div>

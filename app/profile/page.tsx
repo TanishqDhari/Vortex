@@ -20,6 +20,7 @@ type UserData = {
   dob: string;
   login_type: string;
   created_at?: string;
+  user_password: string;
 }
 
 type MediaItem = {
@@ -74,7 +75,6 @@ export default function ProfilePage() {
     dateOfBirth: "",
   })
 
-  // Fetch user data and related information
   useEffect(() => {
     async function fetchUserData() {
       const storedUserId = localStorage.getItem("userId");
@@ -91,10 +91,8 @@ export default function ProfilePage() {
       window.location.href = "/login";
       return;
     }
-    console.log(storedUserId);
     
-      try {
-        
+      try {        
         const [userRes, historyRes, watchlistRes] = await Promise.all([
           fetch(`/api/user/${userId}`),
           fetch(`/api/user/${userId}/watch-history`),
@@ -153,7 +151,6 @@ export default function ProfilePage() {
       });
 
       if (response.ok) {
-        // Update local state
         setUserData(prev => prev ? {
           ...prev,
           fname: formData.firstName,
@@ -199,7 +196,6 @@ export default function ProfilePage() {
       <Sidebar />
 
       <div className="flex-1 ml-16">
-        {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="px-6 py-4">
             <h1 className="text-3xl font-bold text-foreground">Profile</h1>
@@ -218,7 +214,6 @@ export default function ProfilePage() {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
-              {/* Profile Header */}
               <Card>
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
@@ -249,9 +244,6 @@ export default function ProfilePage() {
                         </Badge>
                       </div>
                       <p className="text-muted-foreground mb-2">{userData.email}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Member since {userData.created_at ? new Date(userData.created_at).toLocaleDateString() : "Unknown"}
-                      </p>
                     </div>
                     <Button variant="outline" onClick={() => setIsEditing(true)}>
                       <Edit className="w-4 h-4 mr-2" />
@@ -333,7 +325,6 @@ export default function ProfilePage() {
                         rating={item.rating || 0}
                         image={item.image || "/placeholder.svg"}
                         genre={item.genres || []}
-                        showProgress 
                       />
                     ))}
                   </div>
@@ -548,11 +539,11 @@ export default function ProfilePage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label className="text-muted-foreground">First Name</Label>
-                          <p className="font-medium">{userData.firstName}</p>
+                          <p className="font-medium">{userData.fname}</p>
                         </div>
                         <div>
                           <Label className="text-muted-foreground">Last Name</Label>
-                          <p className="font-medium">{userData.lastName}</p>
+                          <p className="font-medium">{userData.lname}</p>
                         </div>
                       </div>
                       <div>
@@ -561,7 +552,7 @@ export default function ProfilePage() {
                       </div>
                       <div>
                         <Label className="text-muted-foreground">Date of Birth</Label>
-                        <p className="font-medium">{new Date(userData.dateOfBirth).toLocaleDateString()}</p>
+                        <p className="font-medium">{new Date(userData.dob).toLocaleDateString()}</p>
                       </div>
                       <Button variant="outline" onClick={() => setIsEditing(true)}>
                         <Edit className="w-4 h-4 mr-2" />

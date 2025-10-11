@@ -1,5 +1,6 @@
 // app/api/user/check-email/route.ts
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import db from "@/app/api/lib/db";
 import { RowDataPacket } from "mysql2";
 
@@ -8,29 +9,64 @@ type UserRow = RowDataPacket & {
   fname: string;
   lname: string;
   email: string;
+  user_password: string; // ✅ correct column name
   dob?: string;
   login_type?: string;
 };
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
+    const { email, password } = await req.json();
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json(
+        { success: false, message: "Email and password are required." },
+        { status: 400 }
+      );
     }
 
-    // Query user
-    const [rows] = await db.query<UserRow[]>("SELECT * FROM users WHERE email = ?", [email]);
+    // Fetch user record
+    const [rows] = await db.query<UserRow[]>(
+      "SELECT * FROM users WHERE email = ? LIMIT 1",
+      [email]
+    );
 
-    const exists = rows.length > 0;
+    if (rows.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "User not found." },
+        { status: 404 }
+      );
+    }
 
+    const user = rows[0];
+
+    // ✅ Verify hashed password correctly
+    const isMatch = await bcrypt.compare(password, user.user_password);
+
+    if (!isMatch) {
+      return NextResponse.json(
+        { success: false, message: "Invalid credentials." },
+        { status: 401 }
+      );
+    }
+
+    // ✅ Return safe user info
     return NextResponse.json({
-      exists,
-      userId: exists ? rows[0].user_id : null,
+      success: true,
+      message: "User authenticated successfully.",
+      user: {
+        id: user.user_id,
+        name: `${user.fname} ${user.lname}`,
+        email: user.email,
+        dob: user.dob,
+        loginType: user.login_type,
+      },
     });
   } catch (err) {
-    console.error("Error checking email:", err);
-    return NextResponse.json({ exists: false, error: "Server error" }, { status: 500 });
+    console.error("Error in /api/user/check-email:", err);
+    return NextResponse.json(
+      { success: false, message: "Internal server error." },
+      { status: 500 }
+    );
   }
 }

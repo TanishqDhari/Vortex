@@ -56,39 +56,43 @@ export default function LoginPage() {
   //   }
   // };
 
-  const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!validateForm()) return;
+const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-  setIsLoading(true);
-  try {
-    // Check if user exists
-    const checkRes = await fetch("/api/user/check-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: formData.email }),
-    });
+    setIsLoading(true);
+    try {
+      // 🔐 Send both email and password for verification
+      const res = await fetch("/api/user/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-    const checkData = await checkRes.json();
+      const data = await res.json();
 
-    if (!checkRes.ok || !checkData.exists) {
-      alert("Email not found. Please sign up first.");
-      return;
+      if (!res.ok || !data.success) {
+        alert(data.message || "Invalid credentials.");
+        return;
+      }
+
+      // ✅ Login successful — save session info
+      localStorage.setItem("userId", data.user.id);
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userEmail", data.user.email);
+
+      // Redirect
+      window.location.href = "/home";
+    } catch (err) {
+      console.error("Login failed:", err);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-
-    localStorage.setItem("userId", checkData.userId);
-    localStorage.setItem("isLoggedIn", "true");
-
-    // Redirect to home or profile
-    window.location.href = "/home";
-  } catch (err) {
-    console.error(err);
-    alert(err instanceof Error ? err.message : String(err));
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+  };
 
   return (
     <div className="relative min-h-screen flex justify-center">
