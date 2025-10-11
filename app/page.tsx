@@ -5,14 +5,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { CarouselSpacing } from "@/components/landing-carousel"
 import Link from "next/link"
 import { useEffect, useState } from "react";
-type MediaRow = {
-  media_id: number;
+type MediaItem = {
+  id: number;
   title: string;
   image: string;
-}
+};
 
 export default function LandingPage() {
-  const [trendingMedia, setTrendingMedia] = useState<MediaRow[]>([]);
+  const [trendingMedia, setTrendingMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,11 +20,11 @@ export default function LandingPage() {
       try {
         const res = await fetch("/api/media");
         if (!res.ok) throw new Error("Failed to fetch media");
-        const data: MediaRow[] = await res.json();
+        const data: any[] = await res.json();
         const mapped = data
           .filter((m) => m.media_id)
           .map((m) => ({
-            media_id: m.media_id,
+            id: m.media_id,
             title: m.title || "Untitled",
             image: m.image || "/placeholder.svg",
           }));

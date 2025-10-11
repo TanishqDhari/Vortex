@@ -32,16 +32,6 @@ export async function GET() {
       WHERE ct.media_id = m.media_id
     ) AS cast,
     (
-      SELECT JSON_OBJECT(
-        'name', CONCAT(c.fname, ' ', c.lname),
-        'role', ct.crew_role,
-        'image', c.image
-      )
-      FROM contribution ct
-      JOIN crew c ON c.crew_id = ct.crew_id
-      WHERE ct.media_id = m.media_id AND ct.crew_role = 'director'
-    ) AS director,
-    (
       SELECT AVG(r.rating)
       FROM review r
       WHERE r.media_id = m.media_id

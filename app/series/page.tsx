@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { MediaCard } from "@/components/media-card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
 
@@ -12,7 +11,7 @@ type SeriesRow = Record<string, any>;
 type SeriesItem = {
   id: number;
   title: string;
-  year: number;
+  year?: number;
   rating: number;
   image: string;
   genre: string[];
@@ -27,12 +26,10 @@ const ratings = ["All", "9+", "8+", "7+", "6+"];
 const sortOptions = ["popularity", "rating", "year", "title"];
 
 function mapRowToSeries(row: SeriesRow): SeriesItem {
-  // Parse genres from the API response
   let genresArray: string[] = [];
   if (row.genres) {
-    if (Array.isArray(row.genres)) {
-      genresArray = row.genres;
-    } else if (typeof row.genres === "string") {
+    if (Array.isArray(row.genres)) genresArray = row.genres;
+    else if (typeof row.genres === "string") {
       try {
         const parsed = JSON.parse(row.genres);
         genresArray = Array.isArray(parsed) ? parsed : [];
@@ -45,7 +42,7 @@ function mapRowToSeries(row: SeriesRow): SeriesItem {
   return {
     id: Number(row.media_id ?? row.id ?? 0),
     title: String(row.title ?? "Untitled"),
-    year: Number(row.release_year ?? 0),
+    year: row.release_year ? Number(row.release_year) : undefined,
     rating: Number(row.rating ?? 0),
     image: String(row.image ?? "/placeholder.svg"),
     genre: genresArray,
@@ -55,16 +52,15 @@ function mapRowToSeries(row: SeriesRow): SeriesItem {
   };
 }
 
-export default function SeriessPage() {
+export default function SeriesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All");
   const [selectedYear, setSelectedYear] = useState("All");
   const [selectedRating, setSelectedRating] = useState("All");
   const [sortBy, setSortBy] = useState("popularity");
-  const [Seriess, setSeriess] = useState<SeriesItem[]>([]);
+  const [seriesList, setSeriesList] = useState<SeriesItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch TV shows from API
   useEffect(() => {
     let active = true;
     async function load() {
@@ -73,55 +69,49 @@ export default function SeriessPage() {
         if (!res.ok) throw new Error("Failed to fetch media");
         const rows: SeriesRow[] = await res.json();
         if (!active) return;
-        // Filter for series (you might need to add a type field to distinguish)
-        setSeriess(rows.map(mapRowToSeries).filter((s) => s.id));
-      } catch (err) {
-        if (active) setSeriess([]);
+        setSeriesList(rows.map(mapRowToSeries).filter((s) => s.id));
+      } catch {
+        if (active) setSeriesList([]);
       } finally {
         if (active) setLoading(false);
       }
     }
     load();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, []);
 
-  // Filtered and sorted TV shows
   const filteredShows = useMemo(() => {
-    return Seriess.filter((show) => show.title.toLowerCase().includes(searchQuery.toLowerCase()))
-      .filter((show) => selectedGenre === "All" || show.genre.includes(selectedGenre))
-      .filter((show) => selectedYear === "All" || show.year.toString() === selectedYear)
-      .filter((show) => {
+    return seriesList
+      .filter(show => show.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      .filter(show => selectedGenre === "All" || show.genre.includes(selectedGenre))
+      .filter(show => selectedYear === "All" || show.year?.toString() === selectedYear)
+      .filter(show => {
         if (selectedRating === "All") return true;
         const minRating = Number.parseInt(selectedRating);
         return show.rating >= minRating;
       })
       .sort((a, b) => {
         switch (sortBy) {
-          case "rating":
-            return b.rating - a.rating;
-          case "year":
-            return b.year - a.year;
-          case "title":
-            return a.title.localeCompare(b.title);
-          default:
-            return 0; // popularity fallback (implement if needed)
+          case "rating": return b.rating - a.rating;
+          case "year": return (b.year ?? 0) - (a.year ?? 0);
+          case "title": return a.title.localeCompare(b.title);
+          default: return 0;
         }
       });
-  }, [Seriess, searchQuery, selectedGenre, selectedYear, selectedRating, sortBy]);
+  }, [seriesList, searchQuery, selectedGenre, selectedYear, selectedRating, sortBy]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading TV shows...</div>
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Loading TV shows...
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background flex">
       <Sidebar />
-
-      <div className="flex-1 ml-16 flex flex-col">
+      <main className="flex-1 ml-16 overflow-hidden">
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border px-6 py-4">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
@@ -135,114 +125,65 @@ export default function SeriessPage() {
               />
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center justify-center">
+            <div className="flex flex-wrap gap-4 items-center justify-end w-full lg:w-auto">
+              {/* Genre */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Genre</span>
                 <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue>{selectedGenre}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="absolute z-50 w-32">
-                    {genres.map((genre) => (
-                      <SelectItem key={genre} value={genre}>
-                        {genre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectTrigger className="w-32"><SelectValue>{selectedGenre}</SelectValue></SelectTrigger>
+                  <SelectContent>{genres.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-
+              {/* Year */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Year</span>
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-24">
-                    <SelectValue>{selectedYear}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="absolute z-50 w-24">
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectTrigger className="w-24"><SelectValue>{selectedYear}</SelectValue></SelectTrigger>
+                  <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-
+              {/* Rating */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Rating</span>
                 <Select value={selectedRating} onValueChange={setSelectedRating}>
-                  <SelectTrigger className="w-24">
-                    <SelectValue>{selectedRating}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="absolute z-50 w-24">
-                    {ratings.map((rating) => (
-                      <SelectItem key={rating} value={rating}>
-                        {rating}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectTrigger className="w-24"><SelectValue>{selectedRating}</SelectValue></SelectTrigger>
+                  <SelectContent>{ratings.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-
+              {/* Sort */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Sort by</span>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-36">
-                    <SelectValue>{sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="absolute z-50 w-36">
-                    {sortOptions.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectTrigger className="w-36"><SelectValue>{sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}</SelectValue></SelectTrigger>
+                  <SelectContent>{sortOptions.map(o => <SelectItem key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-            </div>
-
-            {/* Active filters */}
-            <div className="flex items-center space-x-2 mt-2">
-              {selectedGenre !== "All" && (
-                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedGenre("All")}>
-                  {selectedGenre} ×
-                </Badge>
-              )}
-              {selectedYear !== "All" && (
-                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedYear("All")}>
-                  {selectedYear} ×
-                </Badge>
-              )}
-              {selectedRating !== "All" && (
-                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedRating("All")}>
-                  {selectedRating} ×
-                </Badge>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 p-6">
+        {/* Content Grid */}
+        <div className="p-6">
           <div className="mb-4 text-muted-foreground">
-            Showing {filteredShows.length} of {Seriess.length} TV shows
+            Showing {filteredShows.length} of {seriesList.length} TV shows
           </div>
-
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-            {filteredShows.map((show) => (
+            {filteredShows.map(show => (
               <MediaCard
                 key={show.id}
                 id={show.id}
                 title={show.title}
                 year={show.year}
-                rating={show.rating}
                 image={show.image}
+                rating={show.rating}
                 genre={show.genre}
+                duration={`${show.seasons ?? 1} Seasons`}
+                description={`A ${show.genre?.join(", ")} series released in ${show.year ?? "Unknown"}.`}
               />
             ))}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
