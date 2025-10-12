@@ -4,8 +4,8 @@ const { uploadVideo, listVideos, serveHLS } = require('../controllers/videoContr
 
 const router = express.Router();
 
-router.post('/upload', upload.single('video'), uploadVideo);
+router.post('/upload/:id', upload.single('video'), uploadVideo);
 router.get('/list', listVideos);
-router.get('/hls/:videoId/:file', serveHLS); // Serves .m3u8 and .ts
+router.get('/hls/:videoId/:file', serveHLS);
 
 module.exports = router;

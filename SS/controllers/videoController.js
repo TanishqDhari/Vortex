@@ -5,7 +5,8 @@ const { transcodeToHLS } = require('../utils/ffmpeg');
 exports.uploadVideo = async (req, res) => {
   if (!req.file) return res.status(400).json({ msg: 'No file uploaded' });
 
-  const videoId = path.basename(req.file.filename, path.extname(req.file.filename));
+  const videoId = req.params.id;
+  if(!videoId) return res.json({msg: "No videoId found"});
 
   // Start transcoding in background
   transcodeToHLS(req.file.path, videoId)

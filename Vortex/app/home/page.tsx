@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { HeroCarousel } from "@/components/hero-carousel";
@@ -13,6 +12,7 @@ type HeroItem = {
   title: string;
   year: number;
   rating: number;
+  age_rating: string;
   duration: string;
   synopsis: string;
   image: string;
@@ -21,9 +21,11 @@ type HeroItem = {
 
 type CardItem = {
   id: number;
+  age_rating: string;
   title: string;
   year: number;
   rating: number;
+  duration: string;
   image: string;
   genre: string[];
   progress?: number;
@@ -54,10 +56,12 @@ function mapRowToCard(row: MediaRow): CardItem {
   return {
     id: Number(row.media_id ?? row.id ?? 0),
     title: String(row.title ?? row.name ?? "Untitled"),
-    year: Number(row.release_year ?? 0),
+    year: row.release_date ? new Date(row.release_date).getFullYear() : 0,
+    age_rating: row.age_rating || "PG-13",
     rating: Number(row.rating ?? row.score ?? 0) || 0,
     image: String(row.image ?? "/placeholder.svg"),
     genre: genresArray,
+    duration: row.duration,
   };
 }
 
@@ -72,6 +76,7 @@ function mapRowToHero(row: MediaRow): HeroItem {
     duration: minutesToDuration(durationMinutes),
     synopsis: String(row.synopsis ?? ""),
     image: card.image,
+    age_rating: card.age_rating,
     genre: card.genre,
   };
 }
@@ -92,14 +97,12 @@ export default function HomePage() {
 
         if (!mediaRes.ok) throw new Error("Failed to load media");
         const mediaRows: MediaRow[] = await mediaRes.json();
-
         const cards = mediaRows.map(mapRowToCard).filter((c) => c.id);
-
+        console.log(mediaRows)
         if (isMounted) {
           setTrendingMovies(cards);
           setFeaturedContent(mediaRows.slice(0, 3).map(mapRowToHero));
         }
-
         if (watchRes && watchRes.ok) {
           const watchRows: MediaRow[] = await watchRes.json();
           if (isMounted) setContinueWatching(watchRows.map(mapRowToCard));

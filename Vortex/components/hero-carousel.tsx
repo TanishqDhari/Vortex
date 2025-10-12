@@ -12,6 +12,7 @@ interface HeroContent {
   year: number
   rating: number
   duration: string
+  age_rating: string
   synopsis: string
   image: string
   genre: string[]
@@ -37,7 +38,6 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
 
   return (
     <div className="relative h-screen overflow-hidden">
-      {/* Slides container */}
       <div
         className="flex transition-transform duration-[1200ms] ease-in-out h-full"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -73,6 +73,8 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
                     <span>{item.year}</span>
                     <span>•</span>
                     <span>Rating {item.rating.toFixed(1)}</span>
+                    <span>•</span>
+                    <span>{item.age_rating}</span>
                     <span>•</span>
                     <span>{item.duration}</span>
                   </div>

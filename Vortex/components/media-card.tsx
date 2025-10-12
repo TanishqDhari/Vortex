@@ -22,7 +22,7 @@ export function MediaCard({
   title,
   year,
   image,
-  duration = "7 Seasons",
+  duration = "02:23:19",
   description = "The city's most highly skilled medical team saves lives while navigating their unique interpersonal relationships.",
 }: MediaCardProps) {
   
@@ -89,6 +89,7 @@ export function MediaCard({
                   <span>English</span>
                 </div>
               </div>
+              <div></div>
               {/* This paragraph is now pushed to the bottom */}
               <p className="text-sm text-neutral-300">{description}</p>
             </div>
