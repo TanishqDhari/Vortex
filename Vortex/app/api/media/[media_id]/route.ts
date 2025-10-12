@@ -81,9 +81,11 @@ export async function PUT(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(_req: Request, context: { params: Params["params"] | Promise<Params["params"]> }) {
   try {
-    const { media_id } = await req.json();
+    const { params } = context;
+    const { media_id } = params instanceof Promise ? await params : params;
+    
     const [result] = await db.execute("DELETE FROM media WHERE media_id=?", [media_id]);
     return Response.json({ message: "Media deleted", result });
   } catch (error) {

@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
-import HeaderBar from "./components/Headerbar"
+import HeaderBar from "./components/HeaderBar"
 import StatsGrid from "./components/StatsGrid"
 import UsersTab from "./components/UsersTab"
 import SupportTab from "./components/SupportTab"

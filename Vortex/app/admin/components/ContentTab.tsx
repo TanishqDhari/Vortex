@@ -78,9 +78,9 @@ export default function ContentManager() {
   async function handleDelete() {
     if (!selectedMedia) return
     try {
-      const res = await fetch(`/api/media/[media_id]/${selectedMedia.media_id}`, {
+      const res = await fetch(`/api/media/${selectedMedia.media_id}`, {
         method: "DELETE",
-      })
+      });
       if (res.ok) {
         setOpenDelete(false)
         await fetchMedia()
