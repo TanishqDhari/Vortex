@@ -20,3 +20,18 @@ export async function GET(_req: Request, { params }: Params) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function PUT(req: Request, { params }: Params) {
+  try {
+    const { genres }: { genres: number[] } = await req.json(); // array of genre_ids
+    await db.query(`DELETE FROM prefers WHERE user_id = ?`, [params.user_id]);
+    if (genres.length > 0) {
+      const values = genres.map((gId) => [params.user_id, gId]);
+      await db.query(`INSERT INTO prefers (user_id, genre_id) VALUES ?`, [values]);
+    }
+    return NextResponse.json({ message: "Preferences updated successfully" });
+  } catch (err) {
+    const error = err as Error;
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

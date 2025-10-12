@@ -15,10 +15,10 @@ export async function GET(_req: Request, { params }: Params) {
 
 export async function PUT(req: Request) {
   try {
-    const { payment_id, payment_amount, parment_mode } = await req.json();
-    const [result] = await db.execute("UPDATE payment SET payment_amount=?, parment_mode=? WHERE payment_id=?", [
+    const { payment_id, payment_amount, payment_mode } = await req.json();
+    const [result] = await db.execute("UPDATE payment SET payment_amount=?, payment_mode=? WHERE payment_id=?", [
       payment_amount,
-      parment_mode,
+      payment_mode,
       payment_id,
     ]);
     return Response.json({ message: "Payment updated", result });
