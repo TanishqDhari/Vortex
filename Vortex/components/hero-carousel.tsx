@@ -84,7 +84,7 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
 
                   <div className="flex items-center space-x-4">
                     {/* Watch Now */}
-                    <Button size="lg" variant="gradient" className="text-lg px-8">
+                    <Button size="lg" variant="gradient" className="text-lg px-8" onClick={() => window.location.href=`/media/${item.id}`}>
                       <Play className="mr-2 h-5 w-5" />
                       Watch Now
                     </Button>

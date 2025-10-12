@@ -86,7 +86,6 @@ export default function MediaPage({ params }: { params: Promise<{ id: string }> 
 
         const transformedMedia: MediaData = {
           id: m.media_id,
-          videoId: "1760205224154", // Map to backend videoId (adjust if needed)
           title: m.title || "Untitled",
           year: m.release_date ? new Date(m.release_date).getFullYear() : 0,
           rating: m.rating !== null && m.rating !== undefined ? parseFloat(Number(m.rating).toFixed(2)) : 0,
@@ -406,8 +405,8 @@ export default function MediaPage({ params }: { params: Promise<{ id: string }> 
         </div>
       </div>
 
-      {showOverlay && media.videoId && (
-        <VideoPlayerOverlay videoId="1760271646130" onClose={() => setShowOverlay(false)} />
+      {showOverlay && media.id && (
+        <VideoPlayerOverlay videoId={String(media.id)} onClose={() => setShowOverlay(false)} />
       )}
     </div>
   );

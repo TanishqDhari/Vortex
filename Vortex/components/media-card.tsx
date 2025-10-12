@@ -66,6 +66,7 @@ export function MediaCard({
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
+                      window.location.href=`/media/${id}`
                     }}
                   >
                     <Play className="mr-2 h-4 w-4 fill-black" />
@@ -90,7 +91,6 @@ export function MediaCard({
                 </div>
               </div>
               <div></div>
-              {/* This paragraph is now pushed to the bottom */}
               <p className="text-sm text-neutral-300">{description}</p>
             </div>
           </div>
