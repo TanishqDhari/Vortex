@@ -1,0 +1,7 @@
+{
+  "/signup/page": "app/signup/page.js",
+  "/media/[id]/page": "app/media/[id]/page.js",
+  "/watchlist/page": "app/watchlist/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/categories/page": "app/categories/page.js"
+}
