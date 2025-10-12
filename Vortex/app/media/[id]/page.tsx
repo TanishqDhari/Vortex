@@ -21,11 +21,11 @@ import {
   Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { VideoPlayerOverlay } from "@/components/videoplayer/VideoPlayerOverlay"; // Import the new component
+import { VideoPlayerOverlay } from "@/components/videoplayer/VideoPlayerOverlay";
 
 type MediaData = {
   id: number;
-  videoId?: string; // For HLS streaming
+  videoId?: string;
   title: string;
   year: number;
   rating: number;

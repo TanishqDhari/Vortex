@@ -40,13 +40,11 @@ export default function WatchlistPage() {
       try {
         const storedUserId = localStorage.getItem("userId");
         if (!storedUserId) {
-          console.log("No userId found in localStorage. Redirecting to login.");
           window.location.href = "/login";
           return;
         }
         const userId = parseInt(storedUserId, 10);
         if (isNaN(userId) || userId <= 0) {
-          console.log("Invalid userId in localStorage. Redirecting to login.");
           window.location.href = "/login";
           return;
         }

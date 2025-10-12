@@ -8,8 +8,7 @@ import {
   Bookmark,
   Grid3X3,
   User,
-  Settings,
-  Flame, // Using Flame as a logo icon
+  Flame, 
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -26,7 +25,6 @@ const navigation = [
 
 const bottomNavigation = [
   { name: "Profile", href: "/profile", icon: User },
-  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar() {
