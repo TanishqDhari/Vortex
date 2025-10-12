@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { Outfit } from "next/font/google"
-import { Suspense } from "react"
 import "./globals.css"
+import ClientWrapper from "./ClientWrapper"
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -13,15 +13,11 @@ export const metadata: Metadata = {
   description: "Stream the latest movies and TV shows with Vortex Cinema Management System",
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
       <body className={`${outfit.variable} font-outfit`}>
-        <Suspense fallback={null}>{children}</Suspense>
+        <ClientWrapper>{children}</ClientWrapper>
       </body>
     </html>
   )

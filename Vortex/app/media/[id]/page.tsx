@@ -102,7 +102,7 @@ export default function MediaPage({ params }: { params: Promise<{ id: string }> 
           backdrop: m.image || "/placeholder.svg",
           trailers: [],
           viewCount: `${m.views || 0} views`,
-          releaseDate: m.release_date || "Unknown",
+          releaseDate: m.release_date ? String(new Date(m.release_date).getFullYear()) : "0",
           awards: [],
           isLiked: false,
           isInWatchlist: false,
@@ -407,7 +407,7 @@ export default function MediaPage({ params }: { params: Promise<{ id: string }> 
       </div>
 
       {showOverlay && media.videoId && (
-        <VideoPlayerOverlay videoId="1760205224154" onClose={() => setShowOverlay(false)} />
+        <VideoPlayerOverlay videoId="1760271646130" onClose={() => setShowOverlay(false)} />
       )}
     </div>
   );
