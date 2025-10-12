@@ -49,13 +49,20 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { media_id, title, release_year, duration, synopsis, image, licence_expire_date, views } = await req.json();
+    const { title, release_date, duration, synopsis, image, licence_expire_date, views } = await req.json();
+    const formattedReleaseDate = release_date || null;
+        const formattedLicense = licence_expire_date
+          ? new Date(licence_expire_date).toISOString().slice(0, 19).replace('T', ' ')
+          : null;
     const [result] = await db.execute(
-      "INSERT INTO media (media_id, title, release_year, duration, synopsis, image, licence_expire_date, views) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [media_id, title, release_year, duration, synopsis, image, licence_expire_date, views]
+      `INSERT INTO media (title, release_date, duration, synopsis, image, licence_expire_date, views)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [title, release_date, duration, synopsis, image, licence_expire_date, views]
     );
+
     return Response.json({ message: "Media created", result });
   } catch (error) {
+    console.log(error);
     return Response.json({ error: (error as Error).message }, { status: 500 });
   }
 }

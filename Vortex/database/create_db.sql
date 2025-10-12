@@ -126,7 +126,7 @@ CREATE TABLE genre(
 CREATE TABLE payment(
 	payment_id int auto_increment,
     payment_amount int,
-    parment_mode varchar(10),
+    payment_mode varchar(10),
     primary key(payment_id)
 );
 
