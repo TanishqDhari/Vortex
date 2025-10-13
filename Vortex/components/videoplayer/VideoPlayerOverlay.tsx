@@ -339,9 +339,7 @@
 
 // export { VideoPlayerOverlay };
 
-
 "use client";
-
 import React, { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 import { Button } from "@/components/ui/button";
@@ -357,18 +355,16 @@ const VideoPlayerOverlay: React.FC<VideoPlayerOverlayProps> = ({ videoId, onClos
   const hlsRef = useRef<Hls | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
-  const [quality, setQuality] = useState(-1); // -1 for auto
+  const [quality, setQuality] = useState(-1);
   const [availableQualities, setAvailableQualities] = useState<{ height: number; index: number }[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
 
-  // Ensure client-side rendering
   useEffect(() => {
     setIsClient(true);
     console.log("VideoPlayerOverlay mounted with videoId:", videoId);
   }, [videoId]);
 
-  // Handle fullscreen state
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -377,7 +373,6 @@ const VideoPlayerOverlay: React.FC<VideoPlayerOverlayProps> = ({ videoId, onClos
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
-  // Load HLS stream
   useEffect(() => {
     if (!isClient || !videoRef.current) {
       console.error("Video ref is not set or not client-side");
@@ -402,7 +397,6 @@ const VideoPlayerOverlay: React.FC<VideoPlayerOverlayProps> = ({ videoId, onClos
         console.log("HLS manifest parsed, qualities:", hls.levels);
         setAvailableQualities(hls.levels.map((level, index) => ({ height: level.height, index })));
         setIsLoading(false);
-        // Restore saved quality
         const savedQuality = localStorage.getItem("videoQuality");
         if (savedQuality && hls.levels[parseInt(savedQuality)]) {
           hls.currentLevel = parseInt(savedQuality);
@@ -414,14 +408,13 @@ const VideoPlayerOverlay: React.FC<VideoPlayerOverlayProps> = ({ videoId, onClos
           });
         }).catch((err) => {
           console.error("Auto-play error:", err);
-          // Rely on native controls for retry
         });
       });
       hls.on(Hls.Events.ERROR, (event, data) => {
         console.error("HLS error:", data);
         if (!data.fatal) {
           console.warn("Non-fatal HLS error, continuing playback:", data.details);
-          return; // Ignore non-fatal errors like bufferSeekOverHole
+          return;
         }
         setIsLoading(false);
         console.error("Fatal HLS error:", data.details);
@@ -457,7 +450,6 @@ const VideoPlayerOverlay: React.FC<VideoPlayerOverlayProps> = ({ videoId, onClos
     }
   };
 
-  // Show/hide controls on mouse move or touch
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     const handleMouseMove = () => {
@@ -498,7 +490,7 @@ const VideoPlayerOverlay: React.FC<VideoPlayerOverlayProps> = ({ videoId, onClos
         <div className="relative w-full aspect-video min-h-[50vh]">
           <video
             ref={videoRef}
-            controls={false} // Disable native controls
+            controls={false}
             autoPlay
             className="w-full h-full bg-black object-contain"
             style={{ minHeight: "50vh", maxHeight: "80vh" }}
@@ -517,7 +509,6 @@ const VideoPlayerOverlay: React.FC<VideoPlayerOverlayProps> = ({ videoId, onClos
               <p className="text-white text-lg font-semibold ml-2">Loading video...</p>
             </div>
           )}
-          {/* Custom Controls */}
           {showControls && (
             <div
               className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 z-10 transition-opacity duration-300"
