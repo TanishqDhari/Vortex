@@ -52,7 +52,7 @@ SELECT
     WHERE ct.media_id = m.media_id AND ct.crew_role = 'Director'
   ) AS directors,
   (
-    SELECT COALESCE(AVG(r.rating), 0)
+    SELECT COALESCE(AVG(r.rating), 8.3)
     FROM review r
     WHERE r.media_id = m.media_id
   ) AS rating

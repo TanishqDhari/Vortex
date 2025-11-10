@@ -9,7 +9,7 @@ type UserRow = RowDataPacket & {
   fname: string;
   lname: string;
   email: string;
-  user_password: string; // ✅ correct column name
+  user_password: string;
   dob?: string;
   login_type?: string;
 };
@@ -25,7 +25,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Fetch user record
     const [rows] = await db.query<UserRow[]>(
       "SELECT * FROM users WHERE email = ? LIMIT 1",
       [email]
@@ -40,7 +39,6 @@ export async function POST(req: Request) {
 
     const user = rows[0];
 
-    // ✅ Verify hashed password correctly
     const isMatch = await bcrypt.compare(password, user.user_password);
 
     if (!isMatch) {
@@ -50,7 +48,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Return safe user info
     return NextResponse.json({
       success: true,
       message: "User authenticated successfully.",

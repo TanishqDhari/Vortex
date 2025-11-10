@@ -58,7 +58,7 @@ function mapRowToCard(row: MediaRow): CardItem {
     title: String(row.title ?? row.name ?? "Untitled"),
     year: row.release_date ? new Date(row.release_date).getFullYear() : 0,
     age_rating: row.age_rating || "PG-13",
-    rating: Number(row.rating ?? row.score ?? 0) || 0,
+    rating: Number(row.rating ?? row.score ?? 0) || 8.5,
     image: String(row.image ?? "/placeholder.svg"),
     genre: genresArray,
     duration: row.duration,
