@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 const navigation = [
@@ -33,7 +33,7 @@ const bottomNavigation = [
 export function Sidebar() {
   const pathname = usePathname();
   const [loading, setLoading] = useState(false);
-
+  const router = useRouter();
   const handleLogout = async () => {
     try {
       setLoading(true);
@@ -44,7 +44,7 @@ export function Sidebar() {
       localStorage.removeItem("isLoggedIn");
       localStorage.removeItem("userEmail");
 
-      window.location.href = "/";
+      router.replace("/");
     } catch (err) {
       console.error("Logout failed:", err);
       alert("Something went wrong during logout.");
