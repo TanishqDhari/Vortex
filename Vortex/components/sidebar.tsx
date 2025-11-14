@@ -64,8 +64,7 @@ export function Sidebar() {
       {/* Top section */}
       <div>
         <div className="flex items-center gap-4 h-10 mb-8 pl-1">
-          <Flame className="h-6 w-6 text-sidebar-primary flex-shrink-0" />
-          <span className="text-lg font-bold text-sidebar-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <span className="text-lg font-bold text-sidebar-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             Vortex
           </span>
         </div>
