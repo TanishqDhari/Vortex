@@ -32,7 +32,6 @@ type MediaItem = {
   year?: number;
   rating?: number;
   genre?: string[];
-  type?: "movie" | "tv";
   duration?: number;
 };
 
@@ -63,8 +62,8 @@ export default function WatchlistPage() {
           return;
         }
         const userId = parseInt(storedUserId, 10);
-        console.log(userId);
         const res = await fetch(`/api/user/${userId}/watchlist`);
+
         if (!res.ok) throw new Error("Failed to load watchlists");
         const data = await res.json();
         setWatchlists(data);
@@ -77,6 +76,11 @@ export default function WatchlistPage() {
   }, []);
 
   const handleCreateWatchlist = async () => {
+    if (!newWatchlist.title.trim()) {
+      alert("Watchlist name cannot be empty.");
+      return;
+    }
+
     try {
       const storedUserId = localStorage.getItem("userId");
       if (!storedUserId) return;
@@ -87,24 +91,20 @@ export default function WatchlistPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           created_by: userId,
-          title: newWatchlist.title,
-          watchlist_desc: newWatchlist.desc,
+          title: newWatchlist.title.trim(),
+          watchlist_desc: newWatchlist.desc.trim(),
           visibility: newWatchlist.visibility === "public" ? 1 : 0,
         }),
       });
 
-      if (!res.ok) {
-        const errText = await res.text();
-        console.error("Backend error:", errText);
-        throw new Error("Failed to create watchlist");
-      }
+      if (!res.ok) throw new Error("Failed to create watchlist");
 
       const created = await res.json();
 
       const newList: Watchlist = {
         id: created.insertId || Date.now(),
-        name: newWatchlist.title,
-        desc: newWatchlist.desc,
+        name: newWatchlist.title.trim(),
+        desc: newWatchlist.desc.trim(),
         visibility: newWatchlist.visibility === "public",
         media: [],
       };
@@ -157,58 +157,57 @@ export default function WatchlistPage() {
                 Create List
               </Button>
             </DialogTrigger>
+
             <DialogContent className="sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle>Create New Watchlist</DialogTitle>
               </DialogHeader>
+
               <div className="grid gap-4 py-2">
-                <div className="flex flex-col">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={newWatchlist.title}
-                    onChange={(e) =>
-                      setNewWatchlist((prev) => ({
-                        ...prev,
-                        title: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <Label htmlFor="desc">Description</Label>
-                  <Input
-                    id="desc"
-                    value={newWatchlist.desc}
-                    onChange={(e) =>
-                      setNewWatchlist((prev) => ({
-                        ...prev,
-                        desc: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <Label htmlFor="visibility">Visibility</Label>
-                  <Select
-                    value={newWatchlist.visibility}
-                    onValueChange={(value) =>
-                      setNewWatchlist((prev) => ({
-                        ...prev,
-                        visibility: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="public">Public</SelectItem>
-                      <SelectItem value="private">Private</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  value={newWatchlist.title}
+                  onChange={(e) =>
+                    setNewWatchlist((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }))
+                  }
+                />
+
+                <Label htmlFor="desc">Description</Label>
+                <Input
+                  id="desc"
+                  value={newWatchlist.desc}
+                  onChange={(e) =>
+                    setNewWatchlist((prev) => ({
+                      ...prev,
+                      desc: e.target.value,
+                    }))
+                  }
+                />
+
+                <Label>Visibility</Label>
+                <Select
+                  value={newWatchlist.visibility}
+                  onValueChange={(value) =>
+                    setNewWatchlist((prev) => ({
+                      ...prev,
+                      visibility: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">Public</SelectItem>
+                    <SelectItem value="private">Private</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
               <DialogFooter>
                 <Button onClick={handleCreateWatchlist}>Create</Button>
               </DialogFooter>
@@ -228,35 +227,33 @@ export default function WatchlistPage() {
                       {list.desc || "No description"}
                     </p>
                   </div>
+
                   <span className="text-xs text-muted-foreground">
                     {list.visibility ? "Public" : "Private"}
                   </span>
                 </CardTitle>
               </CardHeader>
 
+              {/* No sample movie — empty means empty */}
               <HorizontalCarousel>
-                {(list.media.length > 0
-                  ? list.media
-                  : [
-                      {
-                        id: 1,
-                        title: "Sample Movie",
-                        image: "/placeholder.svg",
-                        year: 2025,
-                      },
-                    ]
-                ).map((item) => (
+                {list.media.map((item) => (
                   <MediaCard
                     key={item.id}
                     id={item.id}
                     title={item.title}
                     image={item.image}
                     year={item.year ?? 0}
-                    duration={item.duration ? String(item.duration) : "2h"}
+                    duration={item.duration ? String(item.duration) : undefined}
                     genre={item.genre}
                   />
                 ))}
               </HorizontalCarousel>
+
+              {list.media.length === 0 && (
+                <p className="text-muted-foreground text-sm px-3 py-2">
+                  This list is empty.
+                </p>
+              )}
             </Card>
           ))}
 

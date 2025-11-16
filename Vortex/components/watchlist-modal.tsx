@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 
@@ -14,6 +20,11 @@ export function CreateWatchlistModal({ open, onClose, onCreated }: any) {
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
+    if (!title.trim()) {
+      alert("Title cannot be empty.");
+      return;
+    }
+
     try {
       setLoading(true);
       const storedUserId = localStorage.getItem("userId");
@@ -35,6 +46,7 @@ export function CreateWatchlistModal({ open, onClose, onCreated }: any) {
       });
 
       if (!res.ok) throw new Error("Failed to create watchlist");
+
       onCreated?.();
       onClose();
     } catch (err) {
@@ -47,37 +59,41 @@ export function CreateWatchlistModal({ open, onClose, onCreated }: any) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-lg rounded-xl border border-white/10 bg-background/95 backdrop-blur-xl p-6 space-y-6">
         <DialogHeader>
-          <DialogTitle>Create New Watchlist</DialogTitle>
+          <DialogTitle className="text-xl font-semibold tracking-wide mb-2">
+            Create New Watchlist
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div>
-            <Label>Title</Label>
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Title</Label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter watchlist title"
+              className="h-10"
             />
           </div>
 
-          <div>
-            <Label>Description</Label>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Description</Label>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Short description"
+              className="h-10"
             />
           </div>
 
-          <div>
-            <Label>Visibility</Label>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Visibility</Label>
             <Select value={visibility} onValueChange={setVisibility}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full h-10">
                 <SelectValue placeholder="Select visibility" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border border-white/10">
                 <SelectItem value="public">Public</SelectItem>
                 <SelectItem value="private">Private</SelectItem>
               </SelectContent>
@@ -85,9 +101,20 @@ export function CreateWatchlistModal({ open, onClose, onCreated }: any) {
           </div>
         </div>
 
-        <DialogFooter>
-          <Button onClick={onClose} variant="outline">Cancel</Button>
-          <Button onClick={handleCreate} disabled={loading}>
+        <DialogFooter className="pt-2 gap-3 flex justify-end">
+          <Button
+            onClick={onClose}
+            variant="outline"
+            className="h-10 px-5"
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={handleCreate}
+            disabled={loading}
+            className="h-10 px-5 bg-primary hover:bg-primary/80"
+          >
             {loading ? "Creating..." : "Create"}
           </Button>
         </DialogFooter>
