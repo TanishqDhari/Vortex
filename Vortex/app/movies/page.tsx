@@ -110,7 +110,6 @@ export default function MoviesPage() {
     <div className="min-h-screen bg-background flex pb-8">
       <Sidebar />
       <main className="flex-1 ml-16 overflow-hidden">
-        {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border px-6 py-4">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
             <div className="relative w-full lg:w-1/3">
@@ -124,7 +123,6 @@ export default function MoviesPage() {
             </div>
 
             <div className="flex flex-wrap gap-4 items-center justify-end w-full lg:w-auto">
-              {/* Genre */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Genre</span>
                 <Select value={selectedGenre} onValueChange={setSelectedGenre}>
@@ -132,7 +130,6 @@ export default function MoviesPage() {
                   <SelectContent>{genres.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              {/* Year */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Year</span>
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -140,7 +137,6 @@ export default function MoviesPage() {
                   <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              {/* Rating */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Rating</span>
                 <Select value={selectedRating} onValueChange={setSelectedRating}>
@@ -148,7 +144,6 @@ export default function MoviesPage() {
                   <SelectContent>{ratings.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              {/* Sort */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Sort by</span>
                 <Select value={sortBy} onValueChange={setSortBy}>
@@ -160,7 +155,6 @@ export default function MoviesPage() {
           </div>
         </div>
 
-        {/* Content Grid */}
         <div className="p-6">
           <div className="mb-4 text-muted-foreground">
             Showing {filteredMovies.length} of {movies.length} movies
