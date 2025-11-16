@@ -15,6 +15,7 @@ interface HeroContent {
   age_rating: string
   synopsis: string
   image: string
+  cover: string
   genre: string[]
 }
 
@@ -25,7 +26,7 @@ interface HeroCarouselProps {
 export function HeroCarousel({ content }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [watchlistStatus, setWatchlistStatus] = useState(
-    content.map(() => false) // track watchlist per slide
+    content.map(() => false)
   )
 
   const toggleWatchlist = (index: number) => {
@@ -47,7 +48,7 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
             {/* Background image */}
             <div className="absolute inset-0">
               <img
-                src={item.image || "/placeholder.svg"}
+                src={item.cover || "/placeholder.svg"}
                 alt={item.title}
                 className="w-full h-full object-cover"
               />

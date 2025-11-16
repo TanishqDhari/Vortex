@@ -11,6 +11,7 @@ export async function GET(_req: Request, { params }: Params) {
     const error = err as Error;
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  
 }
 
 export async function PUT(req: Request) {

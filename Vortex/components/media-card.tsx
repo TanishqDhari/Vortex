@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Play, Plus } from "lucide-react";
+import { Play, Plus, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -10,11 +10,10 @@ interface MediaCardProps {
   title: string;
   year: number;
   image: string;
+  cover: string;
   rating?: number;
-  certification?: string;
   duration?: string;
-  description?: string;
-  genre?: string[];
+  synopsis?: string;
 }
 
 export function MediaCard({
@@ -22,13 +21,15 @@ export function MediaCard({
   title,
   year,
   image,
-  duration = "02:23:19",
-  description = "The city's most highly skilled medical team saves lives while navigating their unique interpersonal relationships.",
+  cover,
+  rating,
+  duration,
+  synopsis,
 }: MediaCardProps) {
-  
+
   return (
     <div className="group relative w-full aspect-[2/3]">
-      {/* The Static Base Card */}
+      {/* Base Static Poster */}
       <div className="w-full h-full overflow-hidden rounded-md transition-opacity duration-300 lg:group-hover:opacity-0">
         <img
           src={image || "/placeholder.svg"}
@@ -37,7 +38,7 @@ export function MediaCard({
         />
       </div>
 
-      {/* The Popover Preview Card */}
+      {/* HOVER POPUP */}
       <Link href={`/media/${id}`} className="absolute top-0 left-0 h-full w-full">
         <div
           className={cn(
@@ -50,28 +51,40 @@ export function MediaCard({
           )}
         >
           <div className="w-full h-full rounded-lg overflow-hidden shadow-xl bg-card">
-            <div className="w-full h-[55%]">
+
+            {/* TOP POSTER + TITLE */}
+            <div className="relative w-full h-[55%]">
               <img
-                src={image || "/placeholder.svg"}
+                src={cover || "/placeholder.svg"}
                 alt={title}
                 className="w-full h-full object-cover"
               />
+
+              <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-3">
+                <p className="text-white font-semibold text-lg leading-snug line-clamp-2">
+                  {title}
+                </p>
+              </div>
             </div>
-            <div className="w-full h-[45%] p-4 flex flex-col justify-between">
-              <div>
+
+            {/* BOTTOM INFO */}
+            <div className="w-full h-[45%] p-4 flex flex-col gap-2">
+              <div className="space-y-2">
+                {/* Buttons */}
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
-                    variant= "gradient"
+                    variant="gradient"
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
-                      window.location.href=`/media/${id}`
+                      window.location.href = `/media/${id}`;
                     }}
                   >
                     <Play className="mr-2 h-4 w-4 fill-black" />
                     Watch Now
                   </Button>
+
                   <Button
                     size="icon"
                     variant="secondary"
@@ -84,15 +97,31 @@ export function MediaCard({
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="mt-2 flex items-center gap-3 text-sm text-neutral-400">
+
+                {/* META INFO: YEAR • DURATION • RATING */}
+                <div className="flex items-center gap-3 text-sm text-neutral-400 mt-2">
+
                   <span>{year}</span>
-                  <span>{duration}</span>
-                  <span>English</span>
+
+                  {duration && <span>{duration}</span>}
+
+                  {rating !== undefined && (
+                    <div className="flex items-center gap-1">
+                      <Star size={16} className="text-yellow-400" fill="currentColor" stroke="none"/>
+                      <span className="text-white">{rating}/10</span>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div></div>
-              <p className="text-sm text-neutral-300">{description}</p>
-            </div>
+
+              {/* SYNOPSIS */}
+              {synopsis && (
+                <p className="text-sm text-neutral-300 leading-tight line-clamp-4">
+                  {synopsis}
+                </p>
+              )}
+
+            </div> 
           </div>
         </div>
       </Link>

@@ -18,7 +18,6 @@
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
 }
-  /* Updated color tokens for purple and light black cinema theme */
   --background: oklch(15.557% 0.0017 16.767); /* Light black background */
   --foreground: oklch(0.98 0 0); /* Pure white text */
   --card: oklch(20.463% 0.00002 271.152); /* Slightly lighter black cards */
@@ -29,7 +28,7 @@
   --primary-foreground: oklch(0.98 0 0); /* White text on primary */
   --secondary: oklch(26.448% 0.00003 271.152); /* Secondary dark elements */
   --secondary-foreground: oklch(0.95 0 0); /* Light text on secondary */
-  --muted: oklch(0.3 0.02 0); /* Muted elements */
+  --muted: #2b1832; /* Muted elements */
   --muted-foreground: oklch(87.917% 0.0001 271.152); /* Muted text */
   --accent: #b700ffca; /* purple accent color */
   --accent-foreground: oklch(0.98 0 0); /* White text on accent */
@@ -114,8 +113,6 @@ input:-webkit-autofill:active {
   transition: background-color 2147483647s;
 }
 
-
-/* Ensure Shaka settings button is visible */
 .shaka-settings-button {
   display: block !important;
   opacity: 1 !important;
@@ -131,7 +128,40 @@ input:-webkit-autofill:active {
   border-radius: 4px !important;
 }
 
-/* Ensure controls container doesn't hide settings */
 .shaka-controls-container {
   z-index: 10 !important;
 }
+
+.star-box {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.star-outline {
+  position: absolute;
+  inset: 0;
+  width: 32px;
+  height: 32px;
+  z-index: 3;
+}
+
+.star-fill {
+  position: absolute;
+  inset: 0;
+  width: 32px;
+  height: 32px;
+  z-index: 1;
+}
+
+.star-half {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 16px;
+  height: 32px;
+  overflow: hidden;
+  z-index: 2;
+}
+
+

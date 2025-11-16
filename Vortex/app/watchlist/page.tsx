@@ -3,19 +3,35 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { MediaCard } from "@/components/media-card";
+import { HorizontalCarousel } from "@/components/movie-carousel";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Bookmark, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search, Bookmark, Plus } from "lucide-react";
 
 type MediaItem = {
   id: number;
   title: string;
+  image: string;
   year?: number;
   rating?: number;
-  image: string;
-  genre: string[];
+  genre?: string[];
   type?: "movie" | "tv";
   duration?: number;
 };
@@ -31,9 +47,12 @@ type Watchlist = {
 export default function WatchlistPage() {
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState("all");
-  const [selectedGenre, setSelectedGenre] = useState("all");
-  const [sortBy, setSortBy] = useState("added");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newWatchlist, setNewWatchlist] = useState({
+    title: "",
+    desc: "",
+    visibility: "public",
+  });
 
   useEffect(() => {
     async function fetchWatchlists() {
@@ -44,22 +63,59 @@ export default function WatchlistPage() {
           return;
         }
         const userId = parseInt(storedUserId, 10);
-        if (isNaN(userId) || userId <= 0) {
-          window.location.href = "/login";
-          return;
-        }
+        console.log(userId);
         const res = await fetch(`/api/user/${userId}/watchlist`);
         if (!res.ok) throw new Error("Failed to load watchlists");
         const data = await res.json();
-        console.log(data);
         setWatchlists(data);
       } catch (err) {
-        console.error(err);
+        console.error("Error loading watchlists:", err);
         setWatchlists([]);
       }
     }
     fetchWatchlists();
   }, []);
+
+  const handleCreateWatchlist = async () => {
+    try {
+      const storedUserId = localStorage.getItem("userId");
+      if (!storedUserId) return;
+      const userId = parseInt(storedUserId, 10);
+
+      const res = await fetch(`/api/watchlist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          created_by: userId,
+          title: newWatchlist.title,
+          watchlist_desc: newWatchlist.desc,
+          visibility: newWatchlist.visibility === "public" ? 1 : 0,
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Backend error:", errText);
+        throw new Error("Failed to create watchlist");
+      }
+
+      const created = await res.json();
+
+      const newList: Watchlist = {
+        id: created.insertId || Date.now(),
+        name: newWatchlist.title,
+        desc: newWatchlist.desc,
+        visibility: newWatchlist.visibility === "public",
+        media: [],
+      };
+
+      setWatchlists((prev) => [...prev, newList]);
+      setIsModalOpen(false);
+      setNewWatchlist({ title: "", desc: "", visibility: "public" });
+    } catch (err) {
+      console.error("Create watchlist error:", err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -77,7 +133,7 @@ export default function WatchlistPage() {
               {watchlists.length} total lists
             </p>
 
-            {/* Filters */}
+            {/* Search */}
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1 relative h-10">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
@@ -88,116 +144,121 @@ export default function WatchlistPage() {
                   className="pl-10 h-full text-sm"
                 />
               </div>
-
-              <div className="flex flex-wrap gap-4">
-                {/* Type */}
-                <div className="flex flex-col">
-                  <span className="text-sm text-muted-foreground mb-1">Type</span>
-                  <Select value={selectedType} onValueChange={setSelectedType}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="All" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="movie">Movies</SelectItem>
-                      <SelectItem value="tv">TV Shows</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Genre */}
-                <div className="flex flex-col">
-                  <span className="text-sm text-muted-foreground mb-1">Genre</span>
-                  <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="All Genres" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Genres</SelectItem>
-                      <SelectItem value="Action">Action</SelectItem>
-                      <SelectItem value="Comedy">Comedy</SelectItem>
-                      <SelectItem value="Drama">Drama</SelectItem>
-                      <SelectItem value="Thriller">Thriller</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Sort */}
-                <div className="flex flex-col">
-                  <span className="text-sm text-muted-foreground mb-1">Sort by</span>
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-36">
-                      <SelectValue placeholder="Date Added" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="added">Date Added</SelectItem>
-                      <SelectItem value="title">Title</SelectItem>
-                      <SelectItem value="year">Year</SelectItem>
-                      <SelectItem value="rating">Rating</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
             </div>
           </div>
         </div>
 
+        {/* Create Watchlist Button */}
+        <div className="flex justify-start px-6 mt-6">
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="gradient" className="flex items-center bg-transparent">
+                <Plus className="w-4 h-4 mr-2" />
+                Create List
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Create New Watchlist</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-2">
+                <div className="flex flex-col">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={newWatchlist.title}
+                    onChange={(e) =>
+                      setNewWatchlist((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label htmlFor="desc">Description</Label>
+                  <Input
+                    id="desc"
+                    value={newWatchlist.desc}
+                    onChange={(e) =>
+                      setNewWatchlist((prev) => ({
+                        ...prev,
+                        desc: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label htmlFor="visibility">Visibility</Label>
+                  <Select
+                    value={newWatchlist.visibility}
+                    onValueChange={(value) =>
+                      setNewWatchlist((prev) => ({
+                        ...prev,
+                        visibility: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">Public</SelectItem>
+                      <SelectItem value="private">Private</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleCreateWatchlist}>Create</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
         {/* Watchlists */}
-        <Button variant="gradient" className= " mx-6 bg-transparent mt-6">
-          <Plus className="w-4 h-4 mr-2" />
-          Create List
-        </Button> 
-        <div className="p-6 space-y-8">
-          {watchlists.map((list) => {
-            const filteredMedia = list.media.filter((item) => {
-              const matchesSearch =
-                item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                list.name.toLowerCase().includes(searchQuery.toLowerCase());
-              const matchesType =
-                selectedType === "all" || item.type === selectedType;
-              const matchesGenre =
-                selectedGenre === "all" || item.genre.includes(selectedGenre);
-              return matchesSearch && matchesType && matchesGenre;
-            });
-
-            if (filteredMedia.length === 0) return null;
-
-            return (
-              <Card key={list.id} className="p-4 bg-black/20  ">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-2xl flex justify-between items-center">
-                    <div>
-                      {list.name}
-                      <p className="text-sm text-muted-foreground">
-                        {list.desc || "No description"}
-                      </p>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {list.visibility ? "Public" : "Private"}
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 mb-8">
-                    {filteredMedia.map((item) => (
-                <MediaCard
-                  key={item.id}
-                  id={item.id}
-                  title={item.title}
-                  year={item.year ?? 0} // fallback if year is undefined
-                  image={item.image}
-                  rating={item.rating}
-                  duration={item.duration !== undefined ? String(item.duration) : undefined}         // optional
-                  genre={item.genre}
-                />
-              ))}
-
+        <div className="p-6 space-y-10">
+          {watchlists.map((list) => (
+            <Card key={list.id} className="p-4 bg-black/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-2xl flex justify-between items-center">
+                  <div>
+                    {list.name}
+                    <p className="text-sm text-muted-foreground">
+                      {list.desc || "No description"}
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  <span className="text-xs text-muted-foreground">
+                    {list.visibility ? "Public" : "Private"}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+
+              <HorizontalCarousel>
+                {(list.media.length > 0
+                  ? list.media
+                  : [
+                      {
+                        id: 1,
+                        title: "Sample Movie",
+                        image: "/placeholder.svg",
+                        year: 2025,
+                      },
+                    ]
+                ).map((item) => (
+                  <MediaCard
+                    key={item.id}
+                    id={item.id}
+                    title={item.title}
+                    image={item.image}
+                    year={item.year ?? 0}
+                    duration={item.duration ? String(item.duration) : "2h"}
+                    genre={item.genre}
+                  />
+                ))}
+              </HorizontalCarousel>
+            </Card>
+          ))}
 
           {watchlists.length === 0 && (
             <p className="text-muted-foreground text-center mt-20">

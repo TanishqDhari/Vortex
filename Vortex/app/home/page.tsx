@@ -16,6 +16,7 @@ type HeroItem = {
   duration: string;
   synopsis: string;
   image: string;
+  cover: string;
   genre: string[];
 };
 
@@ -27,7 +28,9 @@ type CardItem = {
   rating: number;
   duration: string;
   image: string;
+  cover: string;
   genre: string[];
+  synopsis?: string;
   progress?: number;
 };
 
@@ -61,7 +64,9 @@ function mapRowToCard(row: MediaRow): CardItem {
     rating: Number(row.rating ?? row.score ?? 0) || 8.5,
     image: String(row.image ?? "/placeholder.svg"),
     genre: genresArray,
+    synopsis: String(row.synopsis ?? ""),
     duration: row.duration,
+    cover: String(row.cover ?? "/placeholder.svg")
   };
 }
 
@@ -76,6 +81,7 @@ function mapRowToHero(row: MediaRow): HeroItem {
     duration: minutesToDuration(durationMinutes),
     synopsis: String(row.synopsis ?? ""),
     image: card.image,
+    cover: card.cover,
     age_rating: card.age_rating,
     genre: card.genre,
   };
