@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import db from "@/app/api/lib/db";
 
-type Params = { params: { media_id: string } };
+type Params = { params: Promise<{ media_id: string }> };
 
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: Request, context: Params) {
   try {
-    const { media_id } = params;
+    const { media_id } = await context.params;
 
     const [rows] = await db.query(
       "SELECT watchlist_id FROM watchlist_media WHERE media_id = ?",
@@ -18,7 +18,9 @@ export async function GET(_req: Request, { params }: Params) {
 
     return NextResponse.json(watchlistIds);
   } catch (err) {
-    const error = err as Error;
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 500 }
+    );
   }
 }
