@@ -62,7 +62,6 @@ export async function GET() {
       FROM series s
       ORDER BY s.series_id;
     `);
-
     return NextResponse.json(rows);
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

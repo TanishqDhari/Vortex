@@ -8,15 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search } from "lucide-react";
 
 type MediaRow = Record<string, any>;
+
 type MovieItem = {
   id: number;
   title: string;
-  year?: number;
-  rating?: number;
-  image?: string;
-  genre?: string[];
-  duration?: string;
-  director?: string;
+  year: number;
+  rating: number;
+  image: string;
+  cover: string;
+  synopsis: string;
+  genre: string[];
+  duration: string;
+  age_rating: string;
 };
 
 const genres = ["All", "Action", "Comedy", "Drama", "Horror", "Romance", "Sci-Fi", "Thriller"];
@@ -26,6 +29,7 @@ const sortOptions = ["popularity", "rating", "year", "title"];
 
 function mapRowToMovie(row: MediaRow): MovieItem {
   let genresArray: string[] = [];
+  
   if (row.genres) {
     if (Array.isArray(row.genres)) genresArray = row.genres;
     else if (typeof row.genres === "string") {
@@ -37,16 +41,18 @@ function mapRowToMovie(row: MediaRow): MovieItem {
       }
     }
   }
-
+  
   return {
     id: Number(row.media_id ?? row.id ?? 0),
     title: String(row.title ?? "Untitled"),
-    year: row.release_year ? Number(row.release_year) : undefined,
-    rating: row.rating ? Number(row.rating) : undefined,
-    image: row.image ?? "/placeholder.svg",
+    year: row.release_date ? new Date(row.release_date).getFullYear() : 0,
+    rating: Number(row.rating ?? row.score ?? 0),
+    image: String(row.image ?? "/placeholder.svg"),
+    cover: String(row.cover ?? "/placeholder.svg"),
     genre: genresArray,
-    duration: row.duration ?? "2h",
-    director: row.director ?? "Unknown",
+    synopsis: String(row.synopsis ?? ""),
+    duration: row.duration,
+    age_rating: row.age_rating ?? "PG-13",
   };
 }
 
@@ -61,37 +67,41 @@ export default function MoviesPage() {
 
   useEffect(() => {
     let active = true;
+
     async function load() {
       try {
         const res = await fetch("/api/media", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch media");
+
         const rows: MediaRow[] = await res.json();
         if (!active) return;
-        setMovies(rows.map(mapRowToMovie).filter((m) => m.id));
+
+        setMovies(rows.map(mapRowToMovie).filter(m => m.id));
       } catch {
         if (active) setMovies([]);
       } finally {
         if (active) setLoading(false);
       }
     }
+
     load();
-    return () => { active = false; };
+    return () => { active = false };
   }, []);
 
   const filteredMovies = useMemo(() => {
     return movies
-      .filter((m) => m.title.toLowerCase().includes(searchQuery.toLowerCase()))
-      .filter((m) => selectedGenre === "All" || m.genre?.includes(selectedGenre))
-      .filter((m) => selectedYear === "All" || m.year?.toString() === selectedYear)
-      .filter((m) => {
+      .filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      .filter(m => selectedGenre === "All" || m.genre.includes(selectedGenre))
+      .filter(m => selectedYear === "All" || m.year.toString() === selectedYear)
+      .filter(m => {
         if (selectedRating === "All") return true;
-        const minRating = Number.parseInt(selectedRating);
-        return (m.rating ?? 0) >= minRating;
+        const minRating = parseInt(selectedRating);
+        return m.rating >= minRating;
       })
       .sort((a, b) => {
         switch (sortBy) {
-          case "rating": return (b.rating ?? 0) - (a.rating ?? 0);
-          case "year": return (b.year ?? 0) - (a.year ?? 0);
+          case "rating": return b.rating - a.rating;
+          case "year": return b.year - a.year;
           case "title": return a.title.localeCompare(b.title);
           default: return 0;
         }
@@ -109,12 +119,13 @@ export default function MoviesPage() {
   return (
     <div className="min-h-screen bg-background flex pb-8">
       <Sidebar />
+
       <main className="flex-1 ml-16 overflow-hidden">
-        {/* Header */}
+        {/* SEARCH & FILTER BAR */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border px-6 py-4">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
             <div className="relative w-full lg:w-1/3">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search movies..."
                 value={searchQuery}
@@ -123,48 +134,74 @@ export default function MoviesPage() {
               />
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center justify-end w-full lg:w-auto">
+            <div className="flex flex-wrap gap-4 items-center justify-end">
               {/* Genre */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Genre</span>
                 <Select value={selectedGenre} onValueChange={setSelectedGenre}>
-                  <SelectTrigger className="w-32"><SelectValue>{selectedGenre}</SelectValue></SelectTrigger>
-                  <SelectContent>{genres.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="w-32">
+                    <SelectValue>{selectedGenre}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {genres.map(g => (
+                      <SelectItem key={g} value={g}>{g}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
+
               {/* Year */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Year</span>
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
                   <SelectTrigger className="w-24"><SelectValue>{selectedYear}</SelectValue></SelectTrigger>
-                  <SelectContent>{years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    {years.map(y => (
+                      <SelectItem key={y} value={y}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
+
               {/* Rating */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Rating</span>
                 <Select value={selectedRating} onValueChange={setSelectedRating}>
                   <SelectTrigger className="w-24"><SelectValue>{selectedRating}</SelectValue></SelectTrigger>
-                  <SelectContent>{ratings.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    {ratings.map(r => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
+
               {/* Sort */}
               <div className="flex flex-col">
-                <span className="text-sm text-muted-foreground mb-1">Sort by</span>
+                <span className="text-sm text-muted-foreground mb-1">Sort By</span>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-36"><SelectValue>{sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}</SelectValue></SelectTrigger>
-                  <SelectContent>{sortOptions.map(o => <SelectItem key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="w-36">
+                    <SelectValue>{sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sortOptions.map(o => (
+                      <SelectItem key={o} value={o}>
+                        {o.charAt(0).toUpperCase() + o.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Content Grid */}
+        {/* MOVIES GRID */}
         <div className="p-6">
           <div className="mb-4 text-muted-foreground">
             Showing {filteredMovies.length} of {movies.length} movies
           </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
             {filteredMovies.map(movie => (
               <MediaCard
@@ -172,9 +209,13 @@ export default function MoviesPage() {
                 id={movie.id}
                 title={movie.title}
                 year={movie.year}
+                rating={movie.rating}
+                age_rating={movie.age_rating}
                 image={movie.image}
+                cover={movie.cover}
                 duration={movie.duration}
-                description={`A ${movie.genre?.join(", ")} movie directed by ${movie.director}.`}
+                synopsis={movie.synopsis}
+                genre={movie.genre}
               />
             ))}
           </div>

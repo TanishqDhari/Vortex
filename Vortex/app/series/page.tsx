@@ -10,7 +10,7 @@ import { Search } from "lucide-react";
 type SeriesRow = Record<string, any>;
 
 type SeriesItem = {
-  id: number;
+  series_id: number;
   title: string;
   year?: number;
   rating: number;
@@ -41,7 +41,7 @@ function mapRowToSeries(row: SeriesRow): SeriesItem {
   }
 
   return {
-    id: Number(row.media_id),
+    series_id: Number(row.series_id),
     title: String(row.title ?? "Untitled"),
     year: row.release_year ? Number(row.release_year) : undefined,
     rating: Number(row.rating ?? 0),
@@ -61,7 +61,7 @@ export default function SeriesPage() {
   const [sortBy, setSortBy] = useState("popularity");
   const [seriesList, setSeriesList] = useState<SeriesItem[]>([]);
   const [loading, setLoading] = useState(true);
-
+  console.log(seriesList)
   useEffect(() => {
     let active = true;
 
@@ -119,7 +119,6 @@ export default function SeriesPage() {
       <Sidebar />
       <main className="flex-1 ml-16 overflow-hidden">
         
-        {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border px-6 py-4">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
             <div className="relative w-full lg:w-1/3">
@@ -133,8 +132,6 @@ export default function SeriesPage() {
             </div>
 
             <div className="flex flex-wrap gap-4 items-center justify-end w-full lg:w-auto">
-
-              {/* Genre */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Genre</span>
                 <Select value={selectedGenre} onValueChange={setSelectedGenre}>
@@ -147,7 +144,6 @@ export default function SeriesPage() {
                 </Select>
               </div>
 
-              {/* Year */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Year</span>
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -160,7 +156,6 @@ export default function SeriesPage() {
                 </Select>
               </div>
 
-              {/* Rating */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Rating</span>
                 <Select value={selectedRating} onValueChange={setSelectedRating}>
@@ -173,7 +168,6 @@ export default function SeriesPage() {
                 </Select>
               </div>
 
-              {/* Sort */}
               <div className="flex flex-col">
                 <span className="text-sm text-muted-foreground mb-1">Sort by</span>
                 <Select value={sortBy} onValueChange={setSortBy}>
@@ -196,7 +190,6 @@ export default function SeriesPage() {
           </div>
         </div>
 
-        {/* Content */}
         <div className="px-6 py-12">
           <div className="mb-4 text-muted-foreground">
             Showing {filteredShows.length} of {seriesList.length} TV shows
@@ -204,17 +197,24 @@ export default function SeriesPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
             {filteredShows.map(show => (
-              <MediaCard
-                key={show.id}
-                id={show.id}
-                title={show.title}
-                year={show.year ?? 0}
-                image={show.image}
-                rating={show.rating}
-                genre={show.genre}
-                duration={`${show.seasons ?? 1} Seasons`}
-                description={`A ${show.genre.join(", ")} series released in ${show.year ?? "Unknown"}.`}
-              />
+              <div
+                key={show.series_id}
+                className="cursor-pointer"
+                onClick={() => (window.location.href = `/series/${show.series_id}`)}
+              >
+                <div className="pointer-events-none">
+                <MediaCard
+                  id={show.series_id}
+                  title={show.title}
+                  year={show.year ?? 0}
+                  image={show.image}
+                  rating={show.rating}
+                  genre={show.genre}
+                  duration={`${show.seasons ?? 1} Seasons`}
+                  description={`A ${show.genre.join(", ")} series released in ${show.year ?? "Unknown"}.`}
+                />
+                </div>
+              </div>
             ))}
           </div>
         </div>
