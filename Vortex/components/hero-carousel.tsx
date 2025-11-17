@@ -39,15 +39,16 @@ interface HeroCarouselProps {
   content: HeroContent[];
 }
 
-// ---------------- API -------------------
-async function fetchWatchlists(): Promise<Watchlist[]> {
-  const res = await fetch("/api/watchlist");
+/* ---------------- API HELPERS ---------------- */
+
+async function fetchWatchlists(userId: number): Promise<Watchlist[]> {
+  const res = await fetch(`/api/watchlist?user_id=${userId}`);
   if (!res.ok) throw new Error("Failed to fetch watchlists");
   return res.json();
 }
 
 async function fetchMovieWatchlistStatus(movieId: number): Promise<number[]> {
-  const res = await fetch(`/api/media/${movieId}/watchlists`);
+  const res = await fetch(`/api/watchlist-media?media_id=${movieId}`);
   if (!res.ok) throw new Error("Failed to fetch movie watchlists");
   return res.json();
 }
@@ -61,56 +62,60 @@ async function updateWatchlist(movieId: number, watchlistId: number, add: boolea
   if (!res.ok) throw new Error("Failed to update watchlist");
 }
 
-// ------------- MAIN CAROUSEL ----------------
+/* ---------------- COMPONENT ---------------- */
+
 export function HeroCarousel({ content }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const [userId, setUserId] = useState<number | null>(null); // NEW
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
-  const [movieWatchlistMapping, setMovieWatchlistMapping] = useState<
-    Record<number, number[]>
-  >({});
+  const [movieWatchlistMapping, setMovieWatchlistMapping] = useState<Record<number, number[]>>({});
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const getWatchlists = useCallback(async () => {
-    try {
-      const lists = await fetchWatchlists();
-      setWatchlists(lists);
-    } catch (err) {
-      console.error(err);
-    }
+  /* Load userId from localStorage */
+  useEffect(() => {
+    const stored = localStorage.getItem("userId");
+    if (stored) setUserId(Number(stored));
   }, []);
 
-  // Fetch all watchlists once
-  useEffect(() => {
-    getWatchlists();
-  }, [getWatchlists]);
+  /* Load all watchlists for this user */
+  const getWatchlists = useCallback(
+    async (uid: number) => {
+      try {
+        const lists = await fetchWatchlists(uid);
+        setWatchlists(lists);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    []
+  );
 
-  // Fetch each movie's watchlist state when it becomes active
+  useEffect(() => {
+    if (!userId) return;
+    getWatchlists(userId);
+  }, [userId, getWatchlists]);
+
+  /* Load each movie's watchlist state */
   useEffect(() => {
     const movieId = content[currentIndex]?.id;
     if (!movieId) return;
-
     if (movieWatchlistMapping[movieId] !== undefined) return;
 
-    const fetchStatus = async () => {
+    const loadStatus = async () => {
       try {
-        const list = await fetchMovieWatchlistStatus(movieId);
-        setMovieWatchlistMapping((prev) => ({
-          ...prev,
-          [movieId]: list,
-        }));
+        const status = await fetchMovieWatchlistStatus(movieId);
+        setMovieWatchlistMapping((prev) => ({ ...prev, [movieId]: status }));
       } catch {
-        setMovieWatchlistMapping((prev) => ({
-          ...prev,
-          [movieId]: [],
-        }));
+        setMovieWatchlistMapping((prev) => ({ ...prev, [movieId]: [] }));
       }
     };
 
-    fetchStatus();
+    loadStatus();
   }, [currentIndex, content, movieWatchlistMapping]);
 
+  /* Toggle in/out of watchlist */
   const toggleInWatchlist = async (movieId: number, wid: number, checked: boolean) => {
     const original = movieWatchlistMapping[movieId] || [];
 
@@ -118,19 +123,13 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
       ? [...original, wid]
       : original.filter((x) => x !== wid);
 
-    setMovieWatchlistMapping((prev) => ({
-      ...prev,
-      [movieId]: updated,
-    }));
+    setMovieWatchlistMapping((prev) => ({ ...prev, [movieId]: updated }));
 
     try {
       await updateWatchlist(movieId, wid, checked);
     } catch (err) {
       console.error(err);
-      setMovieWatchlistMapping((prev) => ({
-        ...prev,
-        [movieId]: original,
-      }));
+      setMovieWatchlistMapping((prev) => ({ ...prev, [movieId]: original }));
     }
   };
 
@@ -144,7 +143,7 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
       <CreateWatchlistModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreated={getWatchlists}
+        onCreated={() => userId && getWatchlists(userId)}
       />
 
       <div className="relative h-screen overflow-hidden">
@@ -154,14 +153,9 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
         >
           {content.map((item) => (
             <div key={item.id} className="min-w-full h-full relative">
-
               {/* BACKGROUND */}
               <div className="absolute inset-0">
-                <img
-                  src={item.cover}
-                  alt={item.title}
-                  className="w-full h-full object-cover"
-                />
+                <img src={item.cover} alt={item.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
               </div>
@@ -170,12 +164,11 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
               <div className="relative h-full flex items-center">
                 <div className="container mx-auto px-6">
                   <div className="max-w-2xl space-y-6">
+
                     {/* GENRES */}
                     <div className="flex items-center space-x-2">
                       {item.genre.map((g) => (
-                        <Badge key={g} className="bg-secondary/40 text-sm">
-                          {g}
-                        </Badge>
+                        <Badge key={g} className="bg-secondary/40 text-sm">{g}</Badge>
                       ))}
                     </div>
 
@@ -184,24 +177,17 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
 
                     {/* META */}
                     <div className="flex items-center space-x-4 text-muted-foreground">
-                      <span>{item.year}</span>
-                      <span>•</span>
-                      <span>Rating {item.rating.toFixed(1)}</span>
-                      <span>•</span>
-                      <span>{item.age_rating}</span>
-                      <span>•</span>
+                      <span>{item.year}</span> <span>•</span>
+                      <span>Rating {item.rating.toFixed(1)}</span> <span>•</span>
+                      <span>{item.age_rating}</span> <span>•</span>
                       <span>{item.duration}</span>
                     </div>
 
                     {/* SYNOPSIS */}
-                    <p className="text-lg text-muted-foreground max-w-xl">
-                      {item.synopsis}
-                    </p>
+                    <p className="text-lg text-muted-foreground max-w-xl">{item.synopsis}</p>
 
                     {/* ACTION BUTTONS */}
                     <div className="flex items-center space-x-4">
-
-                      {/* WATCH NOW */}
                       <Button
                         size="lg"
                         variant="gradient"
@@ -212,8 +198,8 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
                         Watch Now
                       </Button>
 
-                      {/* WATCHLIST DROPDOWN */}
-                      <DropdownMenu onOpenChange={(open) => open && getWatchlists()}>
+                      {/* WATCHLIST MENU */}
+                      <DropdownMenu onOpenChange={(open) => userId && open && getWatchlists(userId)}>
                         <DropdownMenuTrigger asChild>
                           <Button size="lg" variant="normal" className="px-6">
                             {isInAny ? <Check className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
@@ -239,7 +225,6 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
                           ))}
 
                           <DropdownMenuSeparator />
-
                           <DropdownMenuItem onSelect={() => setIsModalOpen(true)}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Create New Watchlist
@@ -256,7 +241,7 @@ export function HeroCarousel({ content }: HeroCarouselProps) {
           ))}
         </div>
 
-        {/* SLIDE INDICATOR */}
+        {/* SLIDE INDICATORS */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
           <div className="backdrop-blur-lg bg-white/15 border border-white/20 rounded-full px-5 py-2 flex space-x-3 shadow-md">
             {content.map((_, i) => (

@@ -40,9 +40,9 @@ return res.json();
 }
 
 async function fetchMovieWatchlistStatus(movieId: number): Promise<number[]> {
-const res = await fetch(`/api/media/${movieId}/watchlists`);
-if (!res.ok) throw new Error("Failed to fetch movie watchlist status");
-return res.json();
+  const res = await fetch(`/api/watchlist-media?media_id=${encodeURIComponent(movieId)}`);
+  if (!res.ok) throw new Error("Failed to fetch movie watchlist status");
+  return res.json();
 }
 
 async function updateWatchlist(movieId: number, watchlistId: number, add: boolean) {

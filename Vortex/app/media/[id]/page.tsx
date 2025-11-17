@@ -1,5 +1,14 @@
 "use client";
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { PlusCircle } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
@@ -25,6 +34,11 @@ Check,
 import { cn } from "@/lib/utils";
 import { VideoPlayerOverlay } from "@/components/videoplayer/VideoPlayerOverlay";
 import ReviewSection from "@/components/review-section";
+
+interface Watchlist {
+  watchlist_id: number;
+  title: string;
+}
 
 type MediaData = {
 id: number;
@@ -61,6 +75,10 @@ const [userRating, setUserRating] = useState(0);
 const [hoverRating, setHoverRating] = useState<number | null>(null);
 const [reaction, setReaction] = useState<"liked" | "disliked" | null>(null);
 const [isInWatchlist, setIsInWatchlist] = useState(false);
+const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
+const [inWatchlists, setInWatchlists] = useState<number[]>([]);
+const [WLloaded, setWLLoaded] = useState(false);
+const [isWLModalOpen, setWLModalOpen] = useState(false);
 const [showOverlay, setShowOverlay] = useState(false);
 const [userId, setUserId] = useState<number | null>(null);
 const isLiked = reaction === "liked";
@@ -95,6 +113,43 @@ useEffect(() => {
   }
   loadUserReview();
 }, [userId, mediaId]);
+
+async function addToWatchlist(mediaId: number, watchlistId: number) {
+  return fetch("/api/watchlist-media", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ media_id: mediaId, watchlist_id: watchlistId }),
+  });
+}
+
+async function removeFromWatchlist(mediaId: number, watchlistId: number) {
+  return fetch("/api/watchlist-media", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ media_id: mediaId, watchlist_id: watchlistId }),
+  });
+}
+
+async function fetchWatchlists(): Promise<{ watchlist_id: number; title: string; }[]> {
+  const res = await fetch("/api/watchlist");
+  if (!res.ok) throw new Error("Failed to load watchlists");
+  return res.json();
+}
+
+async function fetchWatchlistStatus(mediaId: number): Promise<number[]> {
+  const res = await fetch(`/api/watchlist-media?media_id=${mediaId}`);
+  if (!res.ok) throw new Error("Failed to load watchlist status");
+  return res.json();
+}
+
+async function updateWatchlist(mediaId: number, watchlistId: number, add: boolean) {
+  const res = await fetch("/api/watchlist-media", {
+    method: add ? "POST" : "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ media_id: mediaId, watchlist_id: watchlistId }),
+  });
+  if (!res.ok) throw new Error("Failed to update watchlist");
+}
 
 
 useEffect(() => {
@@ -146,8 +201,15 @@ async function fetchMediaData() {
       progress: 0,
     };
 
-    setMedia(transformedMedia);
-    setIsInWatchlist(transformedMedia.isInWatchlist);
+  setMedia(transformedMedia);
+  try {
+    const status = await fetchWatchlistStatus(transformedMedia.id);
+    setIsInWatchlist(status.length > 0);
+    setInWatchlists(status);
+  } catch {
+    setInWatchlists([]);
+    setIsInWatchlist(false);
+  }
   } catch (err: any) {
     setError(err.message || "Something went wrong");
   } finally {
@@ -291,27 +353,80 @@ return (
                   <Play className="mr-2 h-5 w-5" />
                   Watch Now
                 </Button>
-                <Button
-                  size="lg"
-                  variant={"watchlist"}
-                  onClick={() => setIsInWatchlist(!isInWatchlist)}
-                  className={`
-                    transition-none
-                    ${
-                      isInWatchlist
-                        ? "text-white border-green-600 cursor-default"
-                        : "border-white/20 text-white hover:bg-white/10"
-                    }
-                  `}
-                >
-                  {isInWatchlist ? (
-                    <Check className="mr-2 h-5 w-5" />
-                  ) : (
-                    <Plus className="mr-2 h-5 w-5" />
-                  )}
+                {/* WATCHLIST DROPDOWN BUTTON */}
+<DropdownMenu
+  onOpenChange={async (open) => {
+    if (open) {
+      try {
+        const lists = await fetchWatchlists();
+        setWatchlists(lists);
+        const status = await fetchWatchlistStatus(media.id);
+        setInWatchlists(status);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }}
+>
+  <DropdownMenuTrigger asChild>
+    <Button
+      size="lg"
+      variant="watchlist"
+      className={`
+        px-6
+        ${inWatchlists.length > 0
+          ? "text-white border-green-600"
+          : "border-white/20 text-white hover:bg-white/10"
+        }
+      `}
+    >
+      {inWatchlists.length > 0 ? (
+        <Check className="mr-2 h-5 w-5" />
+      ) : (
+        <Plus className="mr-2 h-5 w-5" />
+      )}
 
-                  {isInWatchlist ? "In Watchlist" : "Add to Watchlist"}
-                </Button>
+      {inWatchlists.length > 0 ? "In Watchlist" : "Add to Watchlist"}
+    </Button>
+  </DropdownMenuTrigger>
+
+  <DropdownMenuContent className="max-h-none !overflow-visible">
+    <DropdownMenuLabel>Select Watchlists</DropdownMenuLabel>
+    <DropdownMenuSeparator />
+
+    {watchlists.map((wl) => (
+      <DropdownMenuCheckboxItem
+        key={wl.watchlist_id}
+        checked={inWatchlists.includes(wl.watchlist_id)}
+        onCheckedChange={async (checked) => {
+          try {
+            if (checked) {
+              await addToWatchlist(media.id, wl.watchlist_id);
+              setInWatchlists((prev) => [...prev, wl.watchlist_id]);
+            } else {
+              await removeFromWatchlist(media.id, wl.watchlist_id);
+              setInWatchlists((prev) =>
+                prev.filter((id) => id !== wl.watchlist_id)
+              );
+            }
+          } catch (e) {
+            console.error("Watchlist update failed:", e);
+          }
+        }}
+        onSelect={(e) => e.preventDefault()}
+      >
+        {wl.title}
+      </DropdownMenuCheckboxItem>
+    ))}
+
+    <DropdownMenuSeparator />
+
+    <DropdownMenuItem onSelect={() => setWLModalOpen(true)}>
+      <PlusCircle className="mr-2 h-4 w-4" />
+      Create New Watchlist
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
               </div>
             </div>
           </div>

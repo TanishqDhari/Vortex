@@ -39,7 +39,7 @@ type SubscriptionData = {
   subscription_id: number;
   plan_name: string;
   price: number;
-  billing_cycle: 'Monthly' | 'Yearly';
+  billing_cycle: 30 | 365;
   start_date: string;
   end_date: string;
   status: 'Active' | 'Cancelled' | 'Expired';
@@ -331,7 +331,7 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border border-primary/20">
                       <div>
                         <h3 className="text-xl font-semibold text-foreground">{subscriptionData.plan_name} Plan</h3>
-                        <p className="text-muted-foreground">${subscriptionData.price} / {subscriptionData.billing_cycle === 'Monthly' ? 'month' : 'year'}</p>
+                        <p className="text-muted-foreground">${subscriptionData.price} / {subscriptionData.billing_cycle === 30 ? 'month' : 'year'}</p>
                         <p className="text-sm text-muted-foreground">Next billing: {new Date(subscriptionData.end_date).toLocaleDateString()}</p>
                       </div>
                       <div className="text-right">

@@ -29,7 +29,7 @@ const sortOptions = ["popularity", "rating", "year", "title"];
 
 function mapRowToMovie(row: MediaRow): MovieItem {
   let genresArray: string[] = [];
-  
+
   if (row.genres) {
     if (Array.isArray(row.genres)) genresArray = row.genres;
     else if (typeof row.genres === "string") {
@@ -41,20 +41,26 @@ function mapRowToMovie(row: MediaRow): MovieItem {
       }
     }
   }
-  
+
   return {
-    id: Number(row.media_id ?? row.id ?? 0),
+    id: Number(row.media_id ?? row.movie_id ?? 0),
     title: String(row.title ?? "Untitled"),
     year: row.release_date ? new Date(row.release_date).getFullYear() : 0,
-    rating: Number(row.rating ?? row.score ?? 0),
+
+    rating: Number(row.avg_rating ?? 0),
+
     image: String(row.image ?? "/placeholder.svg"),
     cover: String(row.cover ?? "/placeholder.svg"),
+
     genre: genresArray,
+
     synopsis: String(row.synopsis ?? ""),
-    duration: row.duration,
-    age_rating: row.age_rating ?? "PG-13",
+
+    duration: row.movie_duration,     
+    age_rating: row.movie_age_rating, 
   };
 }
+
 
 export default function MoviesPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -70,7 +76,8 @@ export default function MoviesPage() {
 
     async function load() {
       try {
-        const res = await fetch("/api/media", { cache: "no-store" });
+        const res = await fetch("/api/movie", { cache: "no-store" });
+
         if (!res.ok) throw new Error("Failed to fetch media");
 
         const rows: MediaRow[] = await res.json();
